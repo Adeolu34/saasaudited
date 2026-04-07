@@ -25,6 +25,7 @@ const navSections: { label: string; items: NavItem[] }[] = [
       { href: "/saasadmin/comparisons", icon: "compare", label: "Comparisons" },
       { href: "/saasadmin/blog", icon: "article", label: "Blog Posts" },
       { href: "/saasadmin/categories", icon: "category", label: "Categories" },
+      { href: "/saasadmin/research", icon: "travel_explore", label: "Research" },
     ],
   },
   {
@@ -39,6 +40,7 @@ const navSections: { label: string; items: NavItem[] }[] = [
       { href: "/saasadmin/users", icon: "group", label: "Admin Users" },
       { href: "/saasadmin/api-keys", icon: "key", label: "API Keys" },
       { href: "/saasadmin/monitoring", icon: "monitoring", label: "Monitoring" },
+      { href: "/saasadmin/ai-settings", icon: "smart_toy", label: "AI Settings" },
     ],
   },
 ];

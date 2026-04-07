@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import FormField from "@/components/admin/shared/FormField";
 
 type ContentType = "tool" | "review" | "blog" | "comparison" | "category";
@@ -48,6 +48,14 @@ const typeLabels: Record<ContentType, string> = {
   category: "Category",
 };
 
+const PROGRESS_STEPS = [
+  { text: "Researching topic...", duration: 3000 },
+  { text: "Generating content...", duration: 8000 },
+  { text: "Adding statistics & data...", duration: 5000 },
+  { text: "Generating featured image...", duration: 10000 },
+  { text: "Finalizing...", duration: 5000 },
+];
+
 export default function GenerateModal({
   isOpen,
   onClose,
@@ -56,6 +64,28 @@ export default function GenerateModal({
 }: GenerateModalProps) {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
+  const [progressStep, setProgressStep] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Progress animation
+  useEffect(() => {
+    if (!generating) {
+      setProgressStep(0);
+      if (timerRef.current) clearTimeout(timerRef.current);
+      return;
+    }
+
+    function advanceStep(step: number) {
+      if (step >= PROGRESS_STEPS.length) return;
+      setProgressStep(step);
+      timerRef.current = setTimeout(() => advanceStep(step + 1), PROGRESS_STEPS[step].duration);
+    }
+
+    advanceStep(0);
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [generating]);
 
   if (!isOpen) return null;
 
@@ -92,9 +122,11 @@ export default function GenerateModal({
     }
   }
 
+  const currentStep = PROGRESS_STEPS[Math.min(progressStep, PROGRESS_STEPS.length - 1)];
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50" onClick={generating ? undefined : onClose} />
       <div className="relative bg-surface-container-lowest rounded-2xl shadow-xl w-full max-w-lg mx-4 p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
@@ -105,7 +137,8 @@ export default function GenerateModal({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-surface-container transition-colors text-on-surface-variant"
+            disabled={generating}
+            className="p-1.5 rounded-lg hover:bg-surface-container transition-colors text-on-surface-variant disabled:opacity-30"
           >
             <span className="material-symbols-outlined">close</span>
           </button>
@@ -129,6 +162,30 @@ export default function GenerateModal({
             </div>
           )}
 
+          {/* Progress indicator */}
+          {generating && (
+            <div className="bg-surface-container rounded-lg px-4 py-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-lg text-primary animate-spin">
+                  progress_activity
+                </span>
+                <span className="text-sm text-on-surface font-medium">
+                  {currentStep.text}
+                </span>
+              </div>
+              {/* Progress bar */}
+              <div className="h-1 bg-surface-container-low rounded-full overflow-hidden">
+                <div
+                  className="h-full ember-gradient rounded-full transition-all duration-1000 ease-linear"
+                  style={{ width: `${((progressStep + 1) / PROGRESS_STEPS.length) * 100}%` }}
+                />
+              </div>
+              <p className="text-[11px] text-on-surface-variant">
+                This may take 30-60 seconds for long-form content with images.
+              </p>
+            </div>
+          )}
+
           <div className="flex items-center gap-3 pt-2">
             <button
               type="submit"
@@ -144,7 +201,7 @@ export default function GenerateModal({
               type="button"
               onClick={onClose}
               disabled={generating}
-              className="px-4 py-2.5 rounded-lg text-sm font-medium text-on-surface-variant hover:bg-surface-container transition-colors"
+              className="px-4 py-2.5 rounded-lg text-sm font-medium text-on-surface-variant hover:bg-surface-container transition-colors disabled:opacity-30"
             >
               Cancel
             </button>

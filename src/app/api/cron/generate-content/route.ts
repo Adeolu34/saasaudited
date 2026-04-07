@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import BlogPost from "@/lib/models/BlogPost";
-import { getOpenAI, DEFAULT_MODEL, DEFAULT_MAX_TOKENS } from "@/lib/ai/openai";
+import { getOpenAI } from "@/lib/ai/openai";
 import { generateImage } from "@/lib/ai/image";
 import { parseAIResponse } from "@/lib/ai/parsers";
+import { getGlobalSettings, getPromptOverrides, interpolateTemplate } from "@/lib/ai/settings";
+import { discoverTrendingSaaS, formatSearchResultsForPrompt } from "@/lib/ai/search";
 import * as blogPrompts from "@/lib/ai/prompts/blog-post";
 
-const TOPIC_POOL = [
+const DEFAULT_TOPIC_POOL = [
   "Best practices for evaluating SaaS tools in {year}",
   "How to reduce SaaS spend without sacrificing productivity",
   "Top emerging SaaS categories to watch in {year}",
@@ -39,22 +41,62 @@ export async function POST(request: NextRequest) {
 
   try {
     await dbConnect();
+    const settings = await getGlobalSettings();
 
+    // Resolve topic pool
     const year = new Date().getFullYear();
-    const topic = TOPIC_POOL[Math.floor(Math.random() * TOPIC_POOL.length)].replace(
+    const topicPool =
+      settings.topic_pool.length > 0 ? settings.topic_pool : DEFAULT_TOPIC_POOL;
+    const topic = topicPool[Math.floor(Math.random() * topicPool.length)].replace(
       "{year}",
       String(year)
     );
 
+    // Web search for real SaaS data
+    let searchContext = "";
+    if (settings.search_enabled) {
+      try {
+        const research = await discoverTrendingSaaS();
+        searchContext = formatSearchResultsForPrompt(research);
+      } catch (searchErr) {
+        console.error("[Cron] Search failed, continuing without research:", searchErr);
+      }
+    }
+
+    // Resolve prompts
+    const overrides = await getPromptOverrides("blog");
+    let systemPrompt: string;
+    let userPrompt: string;
+
+    if (overrides?.systemPrompt) {
+      systemPrompt = overrides.systemPrompt;
+    } else {
+      systemPrompt = blogPrompts.buildSystemPrompt();
+    }
+
+    if (overrides?.userPromptTemplate) {
+      userPrompt = interpolateTemplate(overrides.userPromptTemplate, {
+        topic,
+        year: String(year),
+        searchResults: searchContext,
+      });
+    } else {
+      userPrompt = blogPrompts.buildUserPrompt({
+        topic,
+        year: String(year),
+        searchResults: searchContext || undefined,
+      });
+    }
+
     const openai = getOpenAI();
     const completion = await openai.chat.completions.create({
-      model: DEFAULT_MODEL,
+      model: settings.model,
       messages: [
-        { role: "system", content: blogPrompts.buildSystemPrompt() },
-        { role: "user", content: blogPrompts.buildUserPrompt({ topic }) },
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
       ],
-      max_tokens: DEFAULT_MAX_TOKENS,
-      temperature: 0.7,
+      max_tokens: settings.max_tokens,
+      temperature: settings.temperature,
       response_format: { type: "json_object" },
     });
 
@@ -65,15 +107,17 @@ export async function POST(request: NextRequest) {
 
     const blogData = parseAIResponse<Record<string, unknown>>(rawContent);
 
-    // Try generating a featured image (non-blocking failure)
-    try {
-      const imageUrl = await generateImage({
-        title: blogData.title as string,
-        contentType: "blog",
-      });
-      blogData.featured_image = imageUrl;
-    } catch (imgErr) {
-      console.error("[Cron] Image generation failed, publishing without image:", imgErr);
+    // Generate featured image
+    if (settings.auto_generate_images) {
+      try {
+        const imageUrl = await generateImage({
+          title: blogData.title as string,
+          contentType: "blog",
+        });
+        blogData.featured_image = imageUrl;
+      } catch (imgErr) {
+        console.error("[Cron] Image generation failed, publishing without image:", imgErr);
+      }
     }
 
     blogData.published_at = new Date();

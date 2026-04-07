@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ToolForm from "@/components/admin/forms/ToolForm";
 import GenerateModal from "@/components/admin/ai/GenerateModal";
 
@@ -11,6 +11,18 @@ export default function NewToolClient({
 }) {
   const [aiData, setAiData] = useState<Record<string, unknown> | undefined>();
   const [formKey, setFormKey] = useState(0);
+
+  // Check for AI data from Research page
+  useEffect(() => {
+    const stored = sessionStorage.getItem("ai-generated-data");
+    if (stored) {
+      sessionStorage.removeItem("ai-generated-data");
+      try {
+        setAiData(JSON.parse(stored));
+        setFormKey((k) => k + 1);
+      } catch { /* ignore */ }
+    }
+  }, []);
   const [modalOpen, setModalOpen] = useState(false);
 
   function handleGenerated(data: Record<string, unknown>) {

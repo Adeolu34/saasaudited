@@ -1,4 +1,4 @@
-import { BRAND_VOICE, JSON_RULES, HTML_CONTENT_RULES } from "./shared";
+import { BRAND_VOICE, JSON_RULES, HTML_CONTENT_RULES, RESEARCH_CONTEXT_RULES, STATISTICS_RULES } from "./shared";
 
 export function buildSystemPrompt(): string {
   return `${BRAND_VOICE}
@@ -25,7 +25,11 @@ ${HTML_CONTENT_RULES}
 For tldr, provide 3-4 key takeaway points.
 For features, compare 6-10 specific features.
 For decision_criteria, provide 2-3 criteria sections (e.g. "Choose Notion if...", "Choose ClickUp if...").
-The winner should reflect genuine feature analysis, not arbitrary selection.`;
+The winner should reflect genuine feature analysis, not arbitrary selection.
+
+${STATISTICS_RULES}
+
+${RESEARCH_CONTEXT_RULES}`;
 }
 
 export function buildUserPrompt(params: {
@@ -33,8 +37,13 @@ export function buildUserPrompt(params: {
   toolBSlug: string;
   toolAName?: string;
   toolBName?: string;
+  searchResults?: string;
 }): string {
   const nameA = params.toolAName || params.toolASlug;
   const nameB = params.toolBName || params.toolBSlug;
-  return `Create a comprehensive comparison between "${nameA}" (slug: ${params.toolASlug}) and "${nameB}" (slug: ${params.toolBSlug}). Be objective and data-driven.`;
+  let prompt = `Create a comprehensive comparison between "${nameA}" (slug: ${params.toolASlug}) and "${nameB}" (slug: ${params.toolBSlug}). Be objective and data-driven.`;
+  if (params.searchResults) {
+    prompt += params.searchResults;
+  }
+  return prompt;
 }

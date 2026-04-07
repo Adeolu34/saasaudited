@@ -1,4 +1,4 @@
-import { BRAND_VOICE, JSON_RULES, HTML_CONTENT_RULES } from "./shared";
+import { BRAND_VOICE, JSON_RULES, HTML_CONTENT_RULES, RESEARCH_CONTEXT_RULES, STATISTICS_RULES } from "./shared";
 
 export function buildSystemPrompt(): string {
   return `${BRAND_VOICE}
@@ -28,18 +28,26 @@ The body_content should cover:
 4. User Experience
 5. Who Should Use This Tool?
 
-Be balanced: real tools have real weaknesses. Never write a review that is 100% positive.`;
+Be balanced: real tools have real weaknesses. Never write a review that is 100% positive.
+
+${STATISTICS_RULES}
+
+${RESEARCH_CONTEXT_RULES}`;
 }
 
 export function buildUserPrompt(params: {
   toolSlug: string;
   toolName?: string;
   toolDescription?: string;
+  searchResults?: string;
 }): string {
   let prompt = `Write a comprehensive review for the tool "${params.toolName || params.toolSlug}".`;
   if (params.toolDescription) {
     prompt += ` Tool description: ${params.toolDescription}`;
   }
   prompt += ` The tool_slug is "${params.toolSlug}". Generate a unique review slug based on the tool name.`;
+  if (params.searchResults) {
+    prompt += params.searchResults;
+  }
   return prompt;
 }

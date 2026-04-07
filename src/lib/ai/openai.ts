@@ -12,4 +12,4 @@ export function getOpenAI(): OpenAI {
 }
 
 export const DEFAULT_MODEL = process.env.AI_MODEL || "gpt-4o-mini";
-export const DEFAULT_MAX_TOKENS = Number(process.env.AI_MAX_TOKENS) || 4096;
+export const DEFAULT_MAX_TOKENS = Number(process.env.AI_MAX_TOKENS) || 8192;

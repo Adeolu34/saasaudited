@@ -1,4 +1,4 @@
-import { BRAND_VOICE, JSON_RULES } from "./shared";
+import { BRAND_VOICE, JSON_RULES, RESEARCH_CONTEXT_RULES } from "./shared";
 
 export function buildSystemPrompt(): string {
   return `${BRAND_VOICE}
@@ -20,9 +20,18 @@ The JSON must match this exact schema:
 
 For icon_name, use valid Material Symbols Outlined icon names.
 For faq, generate 4-6 common questions buyers would ask about this software category.
-FAQ answers should be 2-3 sentences, informative and helpful.`;
+FAQ answers should be 2-3 sentences, informative and helpful.
+
+${RESEARCH_CONTEXT_RULES}`;
 }
 
-export function buildUserPrompt(params: { categoryName: string }): string {
-  return `Generate complete category data for the SaaS category: "${params.categoryName}". Include helpful FAQs that a B2B buyer would typically ask.`;
+export function buildUserPrompt(params: {
+  categoryName: string;
+  searchResults?: string;
+}): string {
+  let prompt = `Generate complete category data for the SaaS category: "${params.categoryName}". Include helpful FAQs that a B2B buyer would typically ask.`;
+  if (params.searchResults) {
+    prompt += params.searchResults;
+  }
+  return prompt;
 }
