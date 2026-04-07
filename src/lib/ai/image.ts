@@ -21,7 +21,7 @@ export async function generateImage(params: ImageGenerationParams): Promise<stri
       negative_prompt:
         "text, watermark, signature, blurry, low quality, distorted, ugly, nsfw, letters, words, writing",
       width: params.contentType === "blog" ? 1200 : 512,
-      height: params.contentType === "blog" ? 630 : 512,
+      height: params.contentType === "blog" ? 632 : 512,
       num_outputs: 1,
       guidance_scale: 7.5,
       num_inference_steps: 25,
