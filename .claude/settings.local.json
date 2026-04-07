@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx next dev)",
+      "WebSearch",
+      "Bash(npm run seed:*)",
+      "Bash(npx tsx:*)",
+      "Bash(curl:*)",
+      "Bash(findstr:*)"
+    ]
+  }
+}
