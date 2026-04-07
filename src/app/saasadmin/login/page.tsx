@@ -52,7 +52,7 @@ export default function LoginPage() {
               required
               autoComplete="email"
               className="w-full px-4 py-3 bg-surface-container-low rounded-xl text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-shadow"
-              placeholder="admin@saasaudited.com"
+              placeholder="you@example.com"
             />
           </div>
 
