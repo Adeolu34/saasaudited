@@ -74,7 +74,7 @@ const nextConfig: NextConfig = {
           {
             key: "Content-Security-Policy",
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https://lh3.googleusercontent.com https://replicate.delivery https://pbxt.replicate.delivery data:; connect-src 'self'; frame-ancestors 'none';",
+              "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' https://lh3.googleusercontent.com https://replicate.delivery https://pbxt.replicate.delivery data: blob:; connect-src 'self' https://api.openai.com https://api.replicate.com https://google.serper.dev; worker-src 'self' blob:; frame-ancestors 'none';",
           },
         ],
       },
