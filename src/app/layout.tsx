@@ -1,10 +1,6 @@
 import type { Metadata } from "next";
 import { Newsreader, Manrope, Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import TopNavBar from "@/components/layout/TopNavBar";
-import Footer from "@/components/layout/Footer";
-import JsonLd from "@/components/shared/JsonLd";
-import ScrollProgress from "@/components/shared/ScrollProgress";
 
 const newsreader = Newsreader({
   variable: "--font-newsreader",
@@ -74,26 +70,7 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-background text-on-background font-body antialiased min-h-screen flex flex-col grain-overlay overflow-x-hidden">
-        <a
-          href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:bg-primary focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:font-semibold"
-        >
-          Skip to content
-        </a>
-        <JsonLd
-          data={{
-            "@context": "https://schema.org",
-            "@type": "Organization",
-            name: "SaasAudited",
-            description:
-              "Unbiased, data-driven insights into the stacks that scale.",
-            url: "https://saasaudited.com",
-          }}
-        />
-        <TopNavBar />
-        <ScrollProgress />
-        <main id="main-content" className="flex-1">{children}</main>
-        <Footer />
+        {children}
       </body>
     </html>
   );
