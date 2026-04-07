@@ -42,10 +42,10 @@ export async function loginAction(
     email: user.email,
   });
 
-  redirect("/admin");
+  redirect("/saasadmin");
 }
 
 export async function logoutAction() {
   await deleteSession();
-  redirect("/admin/login");
+  redirect("/saasadmin/login");
 }

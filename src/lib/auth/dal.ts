@@ -15,7 +15,7 @@ export const getSession = cache(async (): Promise<SessionPayload | null> => {
 export async function requireAdmin(): Promise<SessionPayload> {
   const session = await getSession();
   if (!session) {
-    redirect("/admin/login");
+    redirect("/saasadmin/login");
   }
   return session;
 }
@@ -27,7 +27,7 @@ export async function requireRole(
   const userLevel = ROLE_HIERARCHY[session.role] ?? 0;
   const requiredLevel = ROLE_HIERARCHY[minRole] ?? 0;
   if (userLevel < requiredLevel) {
-    redirect("/admin?error=unauthorized");
+    redirect("/saasadmin?error=unauthorized");
   }
   return session;
 }

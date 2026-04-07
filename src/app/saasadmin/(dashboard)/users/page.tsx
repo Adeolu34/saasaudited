@@ -24,7 +24,7 @@ export default function UsersPage() {
 
   async function fetchUsers() {
     setLoading(true);
-    const res = await fetch("/api/admin/users");
+    const res = await fetch("/api/saasadmin/users");
     const data = await res.json();
     setUsers(data.users || []);
     setLoading(false);
@@ -36,13 +36,13 @@ export default function UsersPage() {
 
   async function deleteUser() {
     if (!deleting) return;
-    await fetch(`/api/admin/users/${deleting._id}`, { method: "DELETE" });
+    await fetch(`/api/saasadmin/users/${deleting._id}`, { method: "DELETE" });
     setDeleting(null);
     fetchUsers();
   }
 
   async function toggleActive(user: AdminUser) {
-    await fetch(`/api/admin/users/${user._id}`, {
+    await fetch(`/api/saasadmin/users/${user._id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ is_active: !user.is_active }),
@@ -59,7 +59,7 @@ export default function UsersPage() {
           <p className="text-on-surface-variant text-sm mt-1">{users.length} users</p>
         </div>
         <button
-          onClick={() => router.push("/admin/users/new")}
+          onClick={() => router.push("/saasadmin/users/new")}
           className="ember-gradient text-on-primary px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"
         >
           <span className="material-symbols-outlined text-lg">add</span>

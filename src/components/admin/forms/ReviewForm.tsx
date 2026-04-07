@@ -43,8 +43,8 @@ export default function ReviewForm({ review }: { review?: ReviewData }) {
 
     try {
       const url = isEdit
-        ? `/api/admin/reviews/${review!._id}`
-        : "/api/admin/reviews";
+        ? `/api/saasadmin/reviews/${review!._id}`
+        : "/api/saasadmin/reviews";
       const res = await fetch(url, {
         method: isEdit ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
@@ -53,7 +53,7 @@ export default function ReviewForm({ review }: { review?: ReviewData }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to save");
       router.push(
-        "/admin/reviews?success=" +
+        "/saasadmin/reviews?success=" +
           encodeURIComponent(isEdit ? "Review updated" : "Review created")
       );
       router.refresh();

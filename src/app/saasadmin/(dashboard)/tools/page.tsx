@@ -57,7 +57,7 @@ export default async function ToolsPage({
           </p>
         </div>
         <Link
-          href="/admin/tools/new"
+          href="/saasadmin/tools/new"
           className="ember-gradient text-on-primary px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"
         >
           <span className="material-symbols-outlined text-lg">add</span>
@@ -125,7 +125,7 @@ export default async function ToolsPage({
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
                       <Link
-                        href={`/admin/tools/${t._id}/edit`}
+                        href={`/saasadmin/tools/${t._id}/edit`}
                         className="p-1.5 rounded-lg hover:bg-surface-container transition-colors text-on-surface-variant hover:text-primary"
                         title="Edit"
                       >
@@ -160,7 +160,7 @@ export default async function ToolsPage({
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
             <a
               key={p}
-              href={`/admin/tools?q=${encodeURIComponent(q)}&page=${p}`}
+              href={`/saasadmin/tools?q=${encodeURIComponent(q)}&page=${p}`}
               className={`px-3 py-1.5 rounded-lg text-sm ${
                 p === page
                   ? "ember-gradient text-on-primary font-semibold"

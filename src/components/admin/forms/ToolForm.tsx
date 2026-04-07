@@ -77,8 +77,8 @@ export default function ToolForm({
 
     try {
       const url = isEdit
-        ? `/api/admin/tools/${tool!._id}`
-        : "/api/admin/tools";
+        ? `/api/saasadmin/tools/${tool!._id}`
+        : "/api/saasadmin/tools";
       const res = await fetch(url, {
         method: isEdit ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
@@ -87,7 +87,7 @@ export default function ToolForm({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to save");
       router.push(
-        "/admin/tools?success=" +
+        "/saasadmin/tools?success=" +
           encodeURIComponent(isEdit ? "Tool updated" : "Tool created")
       );
       router.refresh();

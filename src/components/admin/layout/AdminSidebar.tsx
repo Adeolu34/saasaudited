@@ -14,31 +14,31 @@ const navSections: { label: string; items: NavItem[] }[] = [
   {
     label: "Overview",
     items: [
-      { href: "/admin", icon: "dashboard", label: "Dashboard", exact: true },
+      { href: "/saasadmin", icon: "dashboard", label: "Dashboard", exact: true },
     ],
   },
   {
     label: "Content",
     items: [
-      { href: "/admin/tools", icon: "construction", label: "Tools" },
-      { href: "/admin/reviews", icon: "rate_review", label: "Reviews" },
-      { href: "/admin/comparisons", icon: "compare", label: "Comparisons" },
-      { href: "/admin/blog", icon: "article", label: "Blog Posts" },
-      { href: "/admin/categories", icon: "category", label: "Categories" },
+      { href: "/saasadmin/tools", icon: "construction", label: "Tools" },
+      { href: "/saasadmin/reviews", icon: "rate_review", label: "Reviews" },
+      { href: "/saasadmin/comparisons", icon: "compare", label: "Comparisons" },
+      { href: "/saasadmin/blog", icon: "article", label: "Blog Posts" },
+      { href: "/saasadmin/categories", icon: "category", label: "Categories" },
     ],
   },
   {
     label: "Community",
     items: [
-      { href: "/admin/comments", icon: "forum", label: "Comments" },
+      { href: "/saasadmin/comments", icon: "forum", label: "Comments" },
     ],
   },
   {
     label: "System",
     items: [
-      { href: "/admin/users", icon: "group", label: "Admin Users" },
-      { href: "/admin/api-keys", icon: "key", label: "API Keys" },
-      { href: "/admin/monitoring", icon: "monitoring", label: "Monitoring" },
+      { href: "/saasadmin/users", icon: "group", label: "Admin Users" },
+      { href: "/saasadmin/api-keys", icon: "key", label: "API Keys" },
+      { href: "/saasadmin/monitoring", icon: "monitoring", label: "Monitoring" },
     ],
   },
 ];
@@ -62,7 +62,7 @@ export default function AdminSidebar({
       <div className="flex items-center justify-between h-14 px-4 border-b border-outline-variant/30">
         {!collapsed && (
           <Link
-            href="/admin"
+            href="/saasadmin"
             className="text-lg font-headline italic tracking-tight text-on-surface"
           >
             Saas<span className="text-primary">Audited</span>

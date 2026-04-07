@@ -26,7 +26,7 @@ export default function ApiKeysPage() {
 
   async function fetchKeys() {
     setLoading(true);
-    const res = await fetch("/api/admin/api-keys");
+    const res = await fetch("/api/saasadmin/api-keys");
     const data = await res.json();
     setKeys(data.keys || []);
     setLoading(false);
@@ -38,7 +38,7 @@ export default function ApiKeysPage() {
 
   async function revokeKey() {
     if (!revoking) return;
-    await fetch(`/api/admin/api-keys/${revoking._id}`, {
+    await fetch(`/api/saasadmin/api-keys/${revoking._id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ is_active: false }),
@@ -48,7 +48,7 @@ export default function ApiKeysPage() {
   }
 
   async function deleteKey(id: string) {
-    await fetch(`/api/admin/api-keys/${id}`, { method: "DELETE" });
+    await fetch(`/api/saasadmin/api-keys/${id}`, { method: "DELETE" });
     fetchKeys();
   }
 
@@ -61,7 +61,7 @@ export default function ApiKeysPage() {
           <p className="text-on-surface-variant text-sm mt-1">{keys.length} keys</p>
         </div>
         <button
-          onClick={() => router.push("/admin/api-keys/new")}
+          onClick={() => router.push("/saasadmin/api-keys/new")}
           className="ember-gradient text-on-primary px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"
         >
           <span className="material-symbols-outlined text-lg">add</span>

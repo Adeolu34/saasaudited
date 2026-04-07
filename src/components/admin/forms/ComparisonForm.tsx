@@ -69,8 +69,8 @@ export default function ComparisonForm({ comparison }: { comparison?: Comparison
 
     try {
       const url = isEdit
-        ? `/api/admin/comparisons/${comparison!._id}`
-        : "/api/admin/comparisons";
+        ? `/api/saasadmin/comparisons/${comparison!._id}`
+        : "/api/saasadmin/comparisons";
       const res = await fetch(url, {
         method: isEdit ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
@@ -79,7 +79,7 @@ export default function ComparisonForm({ comparison }: { comparison?: Comparison
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to save");
       router.push(
-        "/admin/comparisons?success=" +
+        "/saasadmin/comparisons?success=" +
           encodeURIComponent(isEdit ? "Comparison updated" : "Comparison created")
       );
       router.refresh();

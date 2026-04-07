@@ -52,8 +52,8 @@ export default function CategoryForm({ category }: { category?: CategoryData }) 
 
     try {
       const url = isEdit
-        ? `/api/admin/categories/${category!._id}`
-        : "/api/admin/categories";
+        ? `/api/saasadmin/categories/${category!._id}`
+        : "/api/saasadmin/categories";
       const res = await fetch(url, {
         method: isEdit ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
@@ -62,7 +62,7 @@ export default function CategoryForm({ category }: { category?: CategoryData }) 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to save");
       router.push(
-        "/admin/categories?success=" +
+        "/saasadmin/categories?success=" +
           encodeURIComponent(isEdit ? "Category updated" : "Category created")
       );
       router.refresh();

@@ -72,31 +72,31 @@ export default async function AdminDashboard() {
           icon="construction"
           label="Tools"
           value={stats.tools}
-          href="/admin/tools"
+          href="/saasadmin/tools"
         />
         <StatCard
           icon="rate_review"
           label="Reviews"
           value={stats.reviews}
-          href="/admin/reviews"
+          href="/saasadmin/reviews"
         />
         <StatCard
           icon="compare"
           label="Comparisons"
           value={stats.comparisons}
-          href="/admin/comparisons"
+          href="/saasadmin/comparisons"
         />
         <StatCard
           icon="article"
           label="Blog Posts"
           value={stats.blog}
-          href="/admin/blog"
+          href="/saasadmin/blog"
         />
         <StatCard
           icon="category"
           label="Categories"
           value={stats.categories}
-          href="/admin/categories"
+          href="/saasadmin/categories"
         />
       </div>
 
@@ -108,10 +108,10 @@ export default async function AdminDashboard() {
           </h2>
           <div className="grid grid-cols-2 gap-3">
             {[
-              { href: "/admin/tools/new", icon: "add_circle", label: "New Tool" },
-              { href: "/admin/reviews/new", icon: "edit_note", label: "New Review" },
-              { href: "/admin/blog/new", icon: "post_add", label: "New Blog Post" },
-              { href: "/admin/comparisons/new", icon: "compare_arrows", label: "New Comparison" },
+              { href: "/saasadmin/tools/new", icon: "add_circle", label: "New Tool" },
+              { href: "/saasadmin/reviews/new", icon: "edit_note", label: "New Review" },
+              { href: "/saasadmin/blog/new", icon: "post_add", label: "New Blog Post" },
+              { href: "/saasadmin/comparisons/new", icon: "compare_arrows", label: "New Comparison" },
             ].map((action) => (
               <a
                 key={action.href}

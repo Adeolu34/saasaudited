@@ -18,7 +18,7 @@ export default function DeleteButton({
 
   async function handleDelete() {
     try {
-      const res = await fetch(`/api/admin/${resourceType}/${id}`, {
+      const res = await fetch(`/api/saasadmin/${resourceType}/${id}`, {
         method: "DELETE",
       });
       if (!res.ok) throw new Error("Failed to delete");

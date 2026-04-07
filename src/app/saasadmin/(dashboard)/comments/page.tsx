@@ -29,7 +29,7 @@ export default function CommentsPage() {
     setLoading(true);
     const params = new URLSearchParams();
     if (statusFilter) params.set("status", statusFilter);
-    const res = await fetch(`/api/admin/comments?${params}`);
+    const res = await fetch(`/api/saasadmin/comments?${params}`);
     const data = await res.json();
     setComments(data.comments || []);
     setTotal(data.total || 0);
@@ -41,7 +41,7 @@ export default function CommentsPage() {
   }, [fetchComments]);
 
   async function updateStatus(id: string, status: string) {
-    await fetch(`/api/admin/comments/${id}`, {
+    await fetch(`/api/saasadmin/comments/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
@@ -50,13 +50,13 @@ export default function CommentsPage() {
   }
 
   async function deleteComment(id: string) {
-    await fetch(`/api/admin/comments/${id}`, { method: "DELETE" });
+    await fetch(`/api/saasadmin/comments/${id}`, { method: "DELETE" });
     fetchComments();
   }
 
   async function bulkAction(action: string) {
     if (selected.size === 0) return;
-    await fetch("/api/admin/comments/bulk", {
+    await fetch("/api/saasadmin/comments/bulk", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ids: Array.from(selected), action }),
@@ -97,7 +97,7 @@ export default function CommentsPage() {
           <button
             key={s}
             onClick={() =>
-              router.push(`/admin/comments${s ? `?status=${s}` : ""}`)
+              router.push(`/saasadmin/comments${s ? `?status=${s}` : ""}`)
             }
             className={`px-3 py-1.5 rounded-lg text-sm capitalize ${
               statusFilter === s

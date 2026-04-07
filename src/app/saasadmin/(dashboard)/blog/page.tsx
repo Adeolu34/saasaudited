@@ -47,7 +47,7 @@ export default async function BlogPage({
           <h1 className="font-headline text-2xl font-bold text-on-surface">Blog Posts</h1>
           <p className="text-on-surface-variant text-sm mt-1">{total} posts total</p>
         </div>
-        <Link href="/admin/blog/new" className="ember-gradient text-on-primary px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2">
+        <Link href="/saasadmin/blog/new" className="ember-gradient text-on-primary px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2">
           <span className="material-symbols-outlined text-lg">add</span>
           New Post
         </Link>
@@ -80,7 +80,7 @@ export default async function BlogPage({
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
-                      <Link href={`/admin/blog/${p._id}/edit`} className="p-1.5 rounded-lg hover:bg-surface-container transition-colors text-on-surface-variant hover:text-primary" title="Edit">
+                      <Link href={`/saasadmin/blog/${p._id}/edit`} className="p-1.5 rounded-lg hover:bg-surface-container transition-colors text-on-surface-variant hover:text-primary" title="Edit">
                         <span className="material-symbols-outlined text-lg">edit</span>
                       </Link>
                       <DeleteButton id={p._id} name={p.title} resourceType="blog" />
@@ -101,7 +101,7 @@ export default async function BlogPage({
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <a key={p} href={`/admin/blog?q=${encodeURIComponent(q)}&page=${p}`} className={`px-3 py-1.5 rounded-lg text-sm ${p === page ? "ember-gradient text-on-primary font-semibold" : "text-on-surface-variant hover:bg-surface-container"}`}>{p}</a>
+            <a key={p} href={`/saasadmin/blog?q=${encodeURIComponent(q)}&page=${p}`} className={`px-3 py-1.5 rounded-lg text-sm ${p === page ? "ember-gradient text-on-primary font-semibold" : "text-on-surface-variant hover:bg-surface-container"}`}>{p}</a>
           ))}
         </div>
       )}

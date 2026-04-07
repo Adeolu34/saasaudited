@@ -29,7 +29,7 @@ export default function MonitoringPage() {
     async function fetchData() {
       setLoading(true);
       try {
-        const res = await fetch("/api/admin/dashboard");
+        const res = await fetch("/api/saasadmin/dashboard");
         const data = await res.json();
         setErrors(data.recentErrors || []);
         setLogs(data.recentLogs || []);

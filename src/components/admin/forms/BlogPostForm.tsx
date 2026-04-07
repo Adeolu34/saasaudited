@@ -50,7 +50,7 @@ export default function BlogPostForm({ post }: { post?: BlogPostData }) {
     };
 
     try {
-      const url = isEdit ? `/api/admin/blog/${post!._id}` : "/api/admin/blog";
+      const url = isEdit ? `/api/saasadmin/blog/${post!._id}` : "/api/saasadmin/blog";
       const res = await fetch(url, {
         method: isEdit ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
@@ -59,7 +59,7 @@ export default function BlogPostForm({ post }: { post?: BlogPostData }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to save");
       router.push(
-        "/admin/blog?success=" +
+        "/saasadmin/blog?success=" +
           encodeURIComponent(isEdit ? "Post updated" : "Post created")
       );
       router.refresh();

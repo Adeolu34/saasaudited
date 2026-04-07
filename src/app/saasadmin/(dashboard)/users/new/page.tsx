@@ -24,14 +24,14 @@ export default function NewUserPage() {
     };
 
     try {
-      const res = await fetch("/api/admin/users", {
+      const res = await fetch("/api/saasadmin/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to create user");
-      router.push("/admin/users?success=User+created");
+      router.push("/saasadmin/users?success=User+created");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {

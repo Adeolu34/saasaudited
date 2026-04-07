@@ -23,7 +23,7 @@ export default function NewApiKeyPage() {
     };
 
     try {
-      const res = await fetch("/api/admin/api-keys", {
+      const res = await fetch("/api/saasadmin/api-keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -70,7 +70,7 @@ export default function NewApiKeyPage() {
         </div>
 
         <button
-          onClick={() => router.push("/admin/api-keys")}
+          onClick={() => router.push("/saasadmin/api-keys")}
           className="px-6 py-2.5 rounded-lg text-sm font-medium text-on-surface-variant hover:bg-surface-container transition-colors"
         >
           Back to API Keys

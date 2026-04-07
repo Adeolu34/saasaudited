@@ -38,7 +38,7 @@ export default async function CategoriesPage({
           <h1 className="font-headline text-2xl font-bold text-on-surface">Categories</h1>
           <p className="text-on-surface-variant text-sm mt-1">{categories.length} categories</p>
         </div>
-        <Link href="/admin/categories/new" className="ember-gradient text-on-primary px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2">
+        <Link href="/saasadmin/categories/new" className="ember-gradient text-on-primary px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2">
           <span className="material-symbols-outlined text-lg">add</span>
           New Category
         </Link>
@@ -65,7 +65,7 @@ export default async function CategoriesPage({
                   <td className="px-4 py-3 text-sm font-mono text-on-surface">{c.review_count}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
-                      <Link href={`/admin/categories/${c._id}/edit`} className="p-1.5 rounded-lg hover:bg-surface-container transition-colors text-on-surface-variant hover:text-primary" title="Edit">
+                      <Link href={`/saasadmin/categories/${c._id}/edit`} className="p-1.5 rounded-lg hover:bg-surface-container transition-colors text-on-surface-variant hover:text-primary" title="Edit">
                         <span className="material-symbols-outlined text-lg">edit</span>
                       </Link>
                       <DeleteButton id={c._id} name={c.name} resourceType="categories" />

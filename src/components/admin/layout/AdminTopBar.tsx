@@ -4,16 +4,16 @@ import { usePathname } from "next/navigation";
 import { logoutAction } from "@/lib/auth/actions";
 
 const breadcrumbMap: Record<string, string> = {
-  "/admin": "Dashboard",
-  "/admin/tools": "Tools",
-  "/admin/reviews": "Reviews",
-  "/admin/comparisons": "Comparisons",
-  "/admin/blog": "Blog Posts",
-  "/admin/categories": "Categories",
-  "/admin/comments": "Comments",
-  "/admin/users": "Admin Users",
-  "/admin/api-keys": "API Keys",
-  "/admin/monitoring": "Monitoring",
+  "/saasadmin": "Dashboard",
+  "/saasadmin/tools": "Tools",
+  "/saasadmin/reviews": "Reviews",
+  "/saasadmin/comparisons": "Comparisons",
+  "/saasadmin/blog": "Blog Posts",
+  "/saasadmin/categories": "Categories",
+  "/saasadmin/comments": "Comments",
+  "/saasadmin/users": "Admin Users",
+  "/saasadmin/api-keys": "API Keys",
+  "/saasadmin/monitoring": "Monitoring",
 };
 
 function getBreadcrumbs(pathname: string) {
@@ -23,8 +23,8 @@ function getBreadcrumbs(pathname: string) {
   let path = "";
   for (const part of parts) {
     path += `/${part}`;
-    if (path === "/admin") {
-      crumbs.push({ label: "Dashboard", href: "/admin" });
+    if (path === "/saasadmin") {
+      crumbs.push({ label: "Dashboard", href: "/saasadmin" });
     } else if (breadcrumbMap[path]) {
       crumbs.push({ label: breadcrumbMap[path], href: path });
     } else if (part === "new") {
