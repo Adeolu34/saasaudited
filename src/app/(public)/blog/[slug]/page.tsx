@@ -126,7 +126,7 @@ export default async function BlogPostPage({ params }: Props) {
           </div>
 
           {/* Featured Image */}
-          {post.featured_image && (
+          {post.featured_image && typeof post.featured_image === "string" && (
             <figure className="mb-16 max-w-[860px] self-center">
               <img
                 alt={post.title}

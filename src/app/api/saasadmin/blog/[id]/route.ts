@@ -13,6 +13,16 @@ export async function GET(
   return NextResponse.json({ post });
 }
 
+/** Sanitize fields that must be strings — AI sometimes returns {} or [] */
+function sanitizeBody(body: Record<string, unknown>) {
+  for (const key of ["featured_image", "logo_url"]) {
+    if (body[key] && typeof body[key] !== "string") {
+      body[key] = "";
+    }
+  }
+  return body;
+}
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -20,7 +30,7 @@ export async function PUT(
   try {
     await dbConnect();
     const { id } = await params;
-    const body = await request.json();
+    const body = sanitizeBody(await request.json());
     const post = await BlogPost.findByIdAndUpdate(id, body, { new: true, runValidators: true }).lean();
     if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 });
     return NextResponse.json({ post });

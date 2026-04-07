@@ -4,6 +4,13 @@ import BlogPost from "@/lib/models/BlogPost";
 
 export async function GET(request: NextRequest) {
   await dbConnect();
+
+  // One-time cleanup: fix any records where featured_image is not a string
+  await BlogPost.updateMany(
+    { featured_image: { $type: "object" } },
+    { $set: { featured_image: "" } }
+  );
+
   const q = request.nextUrl.searchParams.get("q") || "";
   const page = parseInt(request.nextUrl.searchParams.get("page") || "1");
   const limit = 20;
@@ -15,10 +22,20 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ posts, total, page, totalPages: Math.ceil(total / limit) });
 }
 
+/** Sanitize fields that must be strings — AI sometimes returns {} or [] */
+function sanitizeBody(body: Record<string, unknown>) {
+  for (const key of ["featured_image", "logo_url"]) {
+    if (body[key] && typeof body[key] !== "string") {
+      body[key] = "";
+    }
+  }
+  return body;
+}
+
 export async function POST(request: NextRequest) {
   try {
     await dbConnect();
-    const body = await request.json();
+    const body = sanitizeBody(await request.json());
     const post = await BlogPost.create(body);
     return NextResponse.json({ post }, { status: 201 });
   } catch (err: unknown) {
