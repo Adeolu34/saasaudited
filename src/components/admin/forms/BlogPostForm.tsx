@@ -53,7 +53,9 @@ export default function BlogPostForm({ post }: { post?: BlogPostData }) {
   const [error, setError] = useState("");
   const [toc, setToc] = useState<TocItem[]>(post?.toc || []);
   const [readTime, setReadTime] = useState(post?.read_time || 5);
-  const [featuredImage, setFeaturedImage] = useState(post?.featured_image || "");
+  const [featuredImage, setFeaturedImage] = useState(
+    typeof post?.featured_image === "string" ? post.featured_image : ""
+  );
   const [generatingImage, setGeneratingImage] = useState(false);
   const isEdit = Boolean(post?._id);
 
@@ -66,7 +68,7 @@ export default function BlogPostForm({ post }: { post?: BlogPostData }) {
       }
       setReadTime(post.read_time || calcReadTime(post.content));
     }
-    if (post?.featured_image) setFeaturedImage(post.featured_image);
+    if (post?.featured_image && typeof post.featured_image === "string") setFeaturedImage(post.featured_image);
   }, [post?.content, post?.toc, post?.read_time, post?.featured_image]);
 
   async function handleGenerateImage() {

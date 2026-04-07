@@ -10,6 +10,13 @@ export async function GET(
   const { id } = await params;
   const post = await BlogPost.findById(id).lean();
   if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  // Fix bad data: featured_image should be a string, not an object
+  if (post.featured_image && typeof post.featured_image !== "string") {
+    await BlogPost.updateOne({ _id: id }, { $set: { featured_image: "" } });
+    post.featured_image = "";
+  }
+
   return NextResponse.json({ post });
 }
 
