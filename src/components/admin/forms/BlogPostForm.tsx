@@ -53,6 +53,8 @@ export default function BlogPostForm({ post }: { post?: BlogPostData }) {
   const [error, setError] = useState("");
   const [toc, setToc] = useState<TocItem[]>(post?.toc || []);
   const [readTime, setReadTime] = useState(post?.read_time || 5);
+  const [featuredImage, setFeaturedImage] = useState(post?.featured_image || "");
+  const [generatingImage, setGeneratingImage] = useState(false);
   const isEdit = Boolean(post?._id);
 
   // On mount or when post data changes (e.g. AI data loaded), auto-extract TOC and read_time from content
@@ -64,7 +66,35 @@ export default function BlogPostForm({ post }: { post?: BlogPostData }) {
       }
       setReadTime(post.read_time || calcReadTime(post.content));
     }
-  }, [post?.content, post?.toc, post?.read_time]);
+    if (post?.featured_image) setFeaturedImage(post.featured_image);
+  }, [post?.content, post?.toc, post?.read_time, post?.featured_image]);
+
+  async function handleGenerateImage() {
+    // Get the title from the form
+    const titleInput = document.querySelector<HTMLInputElement>('input[name="title"]');
+    const title = titleInput?.value?.trim();
+    if (!title) {
+      setError("Enter a post title first so we can generate a relevant image.");
+      return;
+    }
+
+    setGeneratingImage(true);
+    setError("");
+    try {
+      const res = await fetch("/api/saasadmin/ai/image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, contentType: "blog" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Image generation failed");
+      setFeaturedImage(data.url);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Image generation failed");
+    } finally {
+      setGeneratingImage(false);
+    }
+  }
 
   /** When content changes, auto-extract TOC and recalculate read time */
   const handleContentChange = useCallback(
@@ -102,7 +132,7 @@ export default function BlogPostForm({ post }: { post?: BlogPostData }) {
       },
       excerpt: form.get("excerpt"),
       content,
-      featured_image: form.get("featured_image") || undefined,
+      featured_image: featuredImage || undefined,
       tags: form.getAll("tags").filter(Boolean),
       toc: finalToc,
       read_time: readTime || calcReadTime(content),
@@ -150,7 +180,52 @@ export default function BlogPostForm({ post }: { post?: BlogPostData }) {
           <FormField label="Read Time (min)" name="read_time" type="number" value={readTime} readOnly />
         </div>
         <TextareaField label="Excerpt" name="excerpt" required defaultValue={post?.excerpt} rows={3} placeholder="Brief summary..." />
-        <FormField label="Featured Image URL" name="featured_image" defaultValue={post?.featured_image} placeholder="https://..." />
+
+        {/* Featured Image with AI Generate */}
+        <div className="space-y-1.5">
+          <label className="font-label text-xs uppercase tracking-widest text-on-surface-variant font-semibold">
+            Featured Image
+          </label>
+          <div className="flex gap-2">
+            <input
+              name="featured_image"
+              value={featuredImage}
+              onChange={(e) => setFeaturedImage(e.target.value)}
+              placeholder="https://... or generate with AI"
+              className="flex-1 px-4 py-2.5 bg-surface-container-low rounded-lg text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-shadow text-sm"
+            />
+            <button
+              type="button"
+              onClick={handleGenerateImage}
+              disabled={generatingImage}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold bg-violet-600 text-white hover:bg-violet-700 disabled:opacity-50 transition-colors whitespace-nowrap"
+            >
+              {generatingImage ? (
+                <span className="material-symbols-outlined text-lg animate-spin">progress_activity</span>
+              ) : (
+                <span className="material-symbols-outlined text-lg">auto_awesome</span>
+              )}
+              {generatingImage ? "Generating..." : "Generate"}
+            </button>
+          </div>
+          {featuredImage && (
+            <div className="mt-3 relative group">
+              <img
+                src={featuredImage}
+                alt="Featured image preview"
+                className="w-full max-h-48 object-cover rounded-lg border border-outline-variant/20"
+              />
+              <button
+                type="button"
+                onClick={() => setFeaturedImage("")}
+                className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <span className="material-symbols-outlined text-sm">close</span>
+              </button>
+            </div>
+          )}
+        </div>
+
         <label className="flex items-center gap-2 text-sm text-on-surface cursor-pointer">
           <input type="checkbox" name="is_featured" defaultChecked={post?.is_featured} className="w-4 h-4 accent-primary" />
           Featured Post
