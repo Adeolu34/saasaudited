@@ -103,6 +103,13 @@ export async function POST(request: NextRequest) {
 
     const data = parseAIResponse<Record<string, unknown>>(rawContent);
 
+    // Sanitize fields that must be strings (AI sometimes returns {} or [] instead of "")
+    for (const key of ["featured_image", "logo_url"]) {
+      if (data[key] && typeof data[key] !== "string") {
+        data[key] = "";
+      }
+    }
+
     // Auto-generate image if enabled
     let imageGenerated = false;
     if (settings.auto_generate_images && IMAGE_TYPES.has(type)) {

@@ -107,6 +107,11 @@ export async function POST(request: NextRequest) {
 
     const blogData = parseAIResponse<Record<string, unknown>>(rawContent);
 
+    // Sanitize: AI sometimes returns {} instead of "" for image fields
+    if (blogData.featured_image && typeof blogData.featured_image !== "string") {
+      blogData.featured_image = "";
+    }
+
     // Generate featured image
     if (settings.auto_generate_images) {
       try {
