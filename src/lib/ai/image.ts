@@ -1,4 +1,5 @@
 import { getReplicate, DEFAULT_IMAGE_MODEL } from "./replicate";
+import { uploadImageFromUrl, isCloudinaryConfigured } from "./upload";
 
 interface ImageGenerationParams {
   title: string;
@@ -33,5 +34,26 @@ export async function generateImage(params: ImageGenerationParams): Promise<stri
     throw new Error("Image generation returned no results");
   }
 
-  return urls[0];
+  const tempUrl = urls[0];
+
+  // Upload to Cloudinary for permanent storage (Replicate URLs expire)
+  if (isCloudinaryConfigured()) {
+    try {
+      const slug = params.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "")
+        .slice(0, 60);
+      const permanentUrl = await uploadImageFromUrl(tempUrl, {
+        folder: `saasaudited/${params.contentType}s`,
+        publicId: slug,
+      });
+      return permanentUrl;
+    } catch (err) {
+      console.error("[Image] Cloudinary upload failed, using temp URL:", err);
+      return tempUrl;
+    }
+  }
+
+  return tempUrl;
 }
