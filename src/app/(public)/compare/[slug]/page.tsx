@@ -25,16 +25,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const comp = await getComparison(slug);
   if (!comp) return { title: "Comparison Not Found" };
+  const description = `${comp.title}: features, pricing, and performance compared side-by-side with data-driven analysis.`;
+  const ogImage = `/api/og?title=${encodeURIComponent(comp.title)}&subtitle=${encodeURIComponent("Head-to-Head Comparison")}`;
   return {
     title: comp.title,
-    description: `A clinical breakdown comparing the two titans. ${comp.title}`,
+    description,
+    alternates: { canonical: `/compare/${slug}` },
     openGraph: {
       title: comp.title,
-      description: `A clinical breakdown comparing the two titans. ${comp.title}`,
+      description,
+      url: `/compare/${slug}`,
+      images: [{ url: ogImage, width: 1200, height: 630 }],
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title: comp.title,
+      description,
+      images: [ogImage],
     },
   };
 }

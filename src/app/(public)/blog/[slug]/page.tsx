@@ -24,19 +24,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const post = await getBlogPost(slug);
   if (!post) return { title: "Post Not Found" };
+  const ogImage = post.featured_image
+    ? post.featured_image
+    : `/api/og?title=${encodeURIComponent(post.title)}&subtitle=${encodeURIComponent("The SaasAudited Journal")}`;
   return {
     title: post.title,
     description: post.excerpt,
+    alternates: { canonical: `/blog/${slug}` },
     openGraph: {
       title: post.title,
       description: post.excerpt,
       type: "article",
-      ...(post.featured_image && { images: [post.featured_image] }),
+      url: `/blog/${slug}`,
+      images: [{ url: ogImage, width: 1200, height: 630 }],
     },
     twitter: {
       card: "summary_large_image",
       title: post.title,
       description: post.excerpt,
+      images: [ogImage],
     },
   };
 }

@@ -1,6 +1,21 @@
+import type { Metadata } from "next";
 export const revalidate = 3600;
 
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "SaasAudited — Unbiased B2B SaaS Reviews & Software Comparisons",
+  description:
+    "Discover the best B2B SaaS tools with data-driven reviews, head-to-head comparisons, and expert buying guides. Unbiased analysis of CRM, project management, AI tools, and more.",
+  alternates: { canonical: "/" },
+  openGraph: {
+    title: "SaasAudited — Unbiased B2B SaaS Reviews & Software Comparisons",
+    description:
+      "Discover the best B2B SaaS tools with data-driven reviews, head-to-head comparisons, and expert buying guides.",
+    url: "/",
+    images: [{ url: "/api/og", width: 1200, height: 630 }],
+  },
+};
 import dbConnect from "@/lib/mongodb";
 import Tool from "@/lib/models/Tool";
 import Category from "@/lib/models/Category";

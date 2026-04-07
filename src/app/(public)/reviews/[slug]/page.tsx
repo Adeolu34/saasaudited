@@ -26,19 +26,28 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const { review } = await getReviewAndTool(slug);
+  const { review, tool } = await getReviewAndTool(slug);
   if (!review) return { title: "Review Not Found" };
+  const description = `In-depth ${tool?.name || ""} review: features, pricing, pros & cons. ${review.title}`;
+  const ogImage = tool?.logo_url
+    ? tool.logo_url
+    : `/api/og?title=${encodeURIComponent(review.title)}&subtitle=${encodeURIComponent("Expert SaaS Review")}`;
   return {
     title: review.title,
-    description: `Read our in-depth review of ${review.title}`,
+    description,
+    alternates: { canonical: `/reviews/${slug}` },
     openGraph: {
       title: review.title,
-      description: `Read our in-depth review of ${review.title}`,
+      description,
       type: "article",
+      url: `/reviews/${slug}`,
+      images: [{ url: ogImage, width: 1200, height: 630 }],
     },
     twitter: {
       card: "summary_large_image",
       title: review.title,
+      description,
+      images: [ogImage],
     },
   };
 }

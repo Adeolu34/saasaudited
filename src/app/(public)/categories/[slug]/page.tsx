@@ -29,16 +29,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const category = await getCategory(slug);
   if (!category) return { title: "Category Not Found" };
+  const title = `Best ${category.name} Software of 2026 — Reviews & Rankings`;
+  const ogImage = `/api/og?title=${encodeURIComponent(`Best ${category.name} of 2026`)}&subtitle=${encodeURIComponent("Category Rankings & Reviews")}`;
   return {
-    title: `Best ${category.name} of 2026`,
+    title,
     description: category.description,
+    alternates: { canonical: `/categories/${slug}` },
     openGraph: {
-      title: `Best ${category.name} of 2026`,
+      title,
       description: category.description,
+      url: `/categories/${slug}`,
+      images: [{ url: ogImage, width: 1200, height: 630 }],
     },
     twitter: {
-      card: "summary",
-      title: `Best ${category.name} of 2026`,
+      card: "summary_large_image",
+      title,
+      description: category.description,
+      images: [ogImage],
     },
   };
 }

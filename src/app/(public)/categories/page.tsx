@@ -8,9 +8,22 @@ import StatsBand from "@/components/shared/StatsBand";
 import ScrollReveal from "@/components/shared/ScrollReveal";
 
 export const metadata: Metadata = {
-  title: "All Categories",
+  title: "SaaS Software Categories — Browse B2B Tools by Category",
   description:
-    "Find software by category. Every category is meticulously curated with rigorous evaluation standards.",
+    "Browse B2B SaaS software by category. CRM, project management, AI tools, marketing automation, and more — each meticulously curated with rigorous evaluation standards.",
+  alternates: { canonical: "/categories" },
+  openGraph: {
+    title: "SaaS Software Categories — Browse B2B Tools by Category",
+    description:
+      "Browse B2B SaaS software by category with expert curation.",
+    url: "/categories",
+    images: [{ url: "/api/og?title=SaaS%20Categories&subtitle=Browse%20B2B%20Tools%20by%20Category", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SaaS Software Categories — Browse B2B Tools by Category",
+    images: ["/api/og?title=SaaS%20Categories&subtitle=Browse%20B2B%20Tools%20by%20Category"],
+  },
 };
 
 export default async function CategoriesHub() {

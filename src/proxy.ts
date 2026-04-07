@@ -11,8 +11,11 @@ function getSecret() {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow the login page through
-  if (pathname === "/saasadmin/login") {
+  // Allow the login page and auth API through
+  if (
+    pathname === "/saasadmin/login" ||
+    pathname.startsWith("/api/saasadmin/auth/")
+  ) {
     return NextResponse.next();
   }
 

@@ -11,9 +11,22 @@ import ScrollReveal from "@/components/shared/ScrollReveal";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "All Reviews",
+  title: "B2B SaaS Reviews — Honest, Data-Driven Software Analysis",
   description:
-    "Every B2B tool, honestly reviewed. Objective, data-driven analysis of the software that powers your business.",
+    "Every B2B SaaS tool, honestly reviewed. Objective, data-driven analysis of CRM, project management, AI tools, and the software that powers your business.",
+  alternates: { canonical: "/reviews" },
+  openGraph: {
+    title: "B2B SaaS Reviews — Honest, Data-Driven Software Analysis",
+    description:
+      "Every B2B SaaS tool, honestly reviewed with data-driven analysis.",
+    url: "/reviews",
+    images: [{ url: "/api/og?title=All%20SaaS%20Reviews&subtitle=Honest%2C%20Data-Driven%20Analysis", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "B2B SaaS Reviews — Honest, Data-Driven Software Analysis",
+    images: ["/api/og?title=All%20SaaS%20Reviews&subtitle=Honest%2C%20Data-Driven%20Analysis"],
+  },
 };
 
 const PER_PAGE = 6;

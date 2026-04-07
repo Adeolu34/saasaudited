@@ -6,9 +6,22 @@ import Comparison from "@/lib/models/Comparison";
 import ScrollReveal from "@/components/shared/ScrollReveal";
 
 export const metadata: Metadata = {
-  title: "Compare SaaS Tools",
+  title: "Compare SaaS Tools — Head-to-Head B2B Software Comparisons",
   description:
-    "Head-to-head comparisons of the top B2B software. Find the hidden trade-offs.",
+    "Side-by-side comparisons of the top B2B SaaS tools. Features, pricing, and performance data to find the hidden trade-offs before you buy.",
+  alternates: { canonical: "/compare" },
+  openGraph: {
+    title: "Compare SaaS Tools — Head-to-Head B2B Software Comparisons",
+    description:
+      "Side-by-side comparisons of the top B2B SaaS tools with data-driven analysis.",
+    url: "/compare",
+    images: [{ url: "/api/og?title=Compare%20SaaS%20Tools&subtitle=Head-to-Head%20Comparisons", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Compare SaaS Tools — Head-to-Head B2B Software Comparisons",
+    images: ["/api/og?title=Compare%20SaaS%20Tools&subtitle=Head-to-Head%20Comparisons"],
+  },
 };
 
 export default async function ComparePage() {

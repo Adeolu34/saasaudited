@@ -9,9 +9,22 @@ import Link from "next/link";
 import NewsletterForm from "@/components/shared/NewsletterForm";
 
 export const metadata: Metadata = {
-  title: "The SaasAudited Journal",
+  title: "The SaasAudited Journal — SaaS Insights & Buying Guides",
   description:
-    "Insights for the modern operator. Strategy, reviews, comparisons, and industry news.",
+    "Expert SaaS insights, B2B software strategy, buying guides, and industry analysis for modern operators and decision-makers.",
+  alternates: { canonical: "/blog" },
+  openGraph: {
+    title: "The SaasAudited Journal — SaaS Insights & Buying Guides",
+    description:
+      "Expert SaaS insights, B2B software strategy, and buying guides.",
+    url: "/blog",
+    images: [{ url: "/api/og?title=The%20SaasAudited%20Journal&subtitle=SaaS%20Insights%20%26%20Buying%20Guides", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "The SaasAudited Journal — SaaS Insights & Buying Guides",
+    images: ["/api/og?title=The%20SaasAudited%20Journal&subtitle=SaaS%20Insights%20%26%20Buying%20Guides"],
+  },
 };
 
 const PER_PAGE = 6;
