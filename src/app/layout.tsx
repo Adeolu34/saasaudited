@@ -38,6 +38,10 @@ export const metadata: Metadata = {
   },
   description:
     "Unbiased, data-driven insights into the stacks that scale. We test every feature so you don't have to waste your budget.",
+  icons: {
+    icon: "/saasreviewedfav.png",
+    apple: "/saasreviewedfav.png",
+  },
   openGraph: {
     type: "website",
     siteName: "SaasAudited",
