@@ -69,7 +69,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="bg-background text-on-background font-body antialiased min-h-screen flex flex-col grain-overlay">
+      <body className="bg-background text-on-background font-body antialiased min-h-screen flex flex-col grain-overlay overflow-x-hidden">
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:bg-primary focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:font-semibold"
