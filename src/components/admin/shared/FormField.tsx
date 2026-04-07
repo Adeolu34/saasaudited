@@ -4,16 +4,20 @@ export default function FormField({
   type = "text",
   required,
   defaultValue,
+  value,
   placeholder,
   error,
+  readOnly,
 }: {
   label: string;
   name: string;
   type?: string;
   required?: boolean;
   defaultValue?: string | number;
+  value?: string | number;
   placeholder?: string;
   error?: string;
+  readOnly?: boolean;
 }) {
   return (
     <div className="space-y-1.5">
@@ -29,10 +33,11 @@ export default function FormField({
         name={name}
         type={type}
         required={required}
-        defaultValue={defaultValue}
+        {...(value !== undefined ? { value } : { defaultValue })}
         placeholder={placeholder}
+        readOnly={readOnly}
         step={type === "number" ? "any" : undefined}
-        className="w-full px-4 py-2.5 bg-surface-container-low rounded-lg text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-shadow text-sm"
+        className={`w-full px-4 py-2.5 bg-surface-container-low rounded-lg text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-shadow text-sm${readOnly ? " opacity-60 cursor-not-allowed" : ""}`}
       />
       {error && <p className="text-error text-xs">{error}</p>}
     </div>

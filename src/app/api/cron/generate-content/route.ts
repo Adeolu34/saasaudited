@@ -120,6 +120,23 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Auto-extract TOC from content if AI didn't generate it
+    if ((!blogData.toc || (blogData.toc as unknown[]).length === 0) && blogData.content) {
+      const tocRegex = /<h2[^>]+id=["']([^"']+)["'][^>]*>(.*?)<\/h2>/gi;
+      const toc: { title: string; anchor: string }[] = [];
+      let m;
+      while ((m = tocRegex.exec(blogData.content as string)) !== null) {
+        toc.push({ anchor: m[1], title: m[2].replace(/<[^>]+>/g, "").trim() });
+      }
+      if (toc.length > 0) blogData.toc = toc;
+    }
+
+    // Auto-calculate read_time from content word count
+    if (blogData.content) {
+      const words = (blogData.content as string).replace(/<[^>]+>/g, " ").split(/\s+/).filter(Boolean).length;
+      blogData.read_time = Math.max(1, Math.ceil(words / 230));
+    }
+
     blogData.published_at = new Date();
 
     // Ensure slug uniqueness

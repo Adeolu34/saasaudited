@@ -62,6 +62,11 @@ export async function POST(request: NextRequest) {
     // Add year to params
     params.year = String(new Date().getFullYear());
 
+    // Split comma-separated keywords into array for blog prompts
+    if (type === "blog" && params.keywords && typeof params.keywords === "string") {
+      params.keywords = params.keywords.split(",").map((k: string) => k.trim()).filter(Boolean);
+    }
+
     // Resolve prompts: DB override or hardcoded default
     const hardcodedPrompts = promptMap[type as ContentType];
     let systemPrompt: string;

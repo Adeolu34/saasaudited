@@ -6,6 +6,7 @@ export default function TextareaField({
   placeholder,
   rows = 6,
   error,
+  onChange,
 }: {
   label: string;
   name: string;
@@ -14,6 +15,7 @@ export default function TextareaField({
   placeholder?: string;
   rows?: number;
   error?: string;
+  onChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
 }) {
   return (
     <div className="space-y-1.5">
@@ -31,6 +33,7 @@ export default function TextareaField({
         defaultValue={defaultValue}
         placeholder={placeholder}
         rows={rows}
+        onChange={onChange}
         className="w-full px-4 py-2.5 bg-surface-container-low rounded-lg text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-shadow text-sm resize-y"
       />
       {error && <p className="text-error text-xs">{error}</p>}

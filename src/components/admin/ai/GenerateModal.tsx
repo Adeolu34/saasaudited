@@ -28,6 +28,7 @@ const paramConfig: Record<
   blog: [
     { name: "topic", label: "Topic / Title Idea", placeholder: "e.g. Best project management tools for startups", required: true },
     { name: "category", label: "Category", placeholder: "e.g. Strategy, Guides, Industry News" },
+    { name: "keywords", label: "Target SEO Keywords", placeholder: "e.g. best CRM tools, CRM software comparison, CRM pricing" },
   ],
   comparison: [
     { name: "toolASlug", label: "Tool A Slug", placeholder: "e.g. notion", required: true },

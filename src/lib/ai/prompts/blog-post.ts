@@ -61,9 +61,10 @@ export function buildUserPrompt(params: {
   prompt += ` The current year is ${year}.`;
   if (params.category) prompt += ` Category: "${params.category}".`;
   if (params.keywords?.length) {
-    prompt += ` Target keywords: ${params.keywords.join(", ")}.`;
+    prompt += ` Target SEO keywords — weave these naturally into headings and body text: ${params.keywords.join(", ")}.`;
   }
   prompt += ` Remember: the content MUST be at least 3000 words with 6-10 detailed sections, real statistics, and specific SaaS tool references.`;
+  prompt += ` CRITICAL: Generate a complete "toc" array in the JSON. Every <h2> in the content must have an id attribute, and the toc array must list every h2 with matching title and anchor.`;
   if (params.searchResults) {
     prompt += params.searchResults;
   }
