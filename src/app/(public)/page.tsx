@@ -23,15 +23,15 @@ export default async function HomePage() {
     <>
       {/* Category Pills Strip */}
       <div className="w-full bg-surface-container-low border-b border-surface-container/50 overflow-x-auto no-scrollbar">
-        <div className="max-w-7xl mx-auto px-6 py-3 flex gap-3 items-center justify-center">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-outline mr-2 shrink-0">
+        <div className="max-w-7xl mx-auto px-8 py-4 flex gap-3 items-center flex-wrap md:flex-nowrap md:justify-center">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-outline mr-3 shrink-0">
             Quick Filter:
           </span>
           {categories.map((cat) => (
             <Link
               key={cat.slug}
               href={`/categories/${cat.slug}`}
-              className="px-4 py-1.5 rounded-full bg-surface-container-lowest text-on-surface-variant text-xs font-medium hover:bg-secondary-container/20 transition-all border border-outline-variant/10 whitespace-nowrap hover:border-primary/30 hover:text-primary"
+              className="px-5 py-2 rounded-full bg-surface-container-lowest text-on-surface-variant text-xs font-medium hover:bg-primary hover:text-on-primary transition-all border border-outline-variant/15 whitespace-nowrap"
             >
               {cat.name}
             </Link>
