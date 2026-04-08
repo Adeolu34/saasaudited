@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
 
     // Assign a random author for blog posts
     if (type === "blog" && !params.author) {
-      params.author = getRandomAuthor();
+      params.author = await getRandomAuthor();
     }
 
     // Resolve prompts: DB override or hardcoded default

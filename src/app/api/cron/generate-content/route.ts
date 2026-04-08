@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       systemPrompt = blogPrompts.buildSystemPrompt();
     }
 
-    const author = getRandomAuthor();
+    const author = await getRandomAuthor();
 
     if (overrides?.userPromptTemplate) {
       userPrompt = interpolateTemplate(overrides.userPromptTemplate, {

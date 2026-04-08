@@ -5,6 +5,7 @@ import SearchInput from "@/components/admin/shared/SearchInput";
 import Toast from "@/components/admin/shared/Toast";
 import DeleteButton from "@/components/admin/shared/DeleteButton";
 import BulkImageButton from "@/components/admin/shared/BulkImageButton";
+import AuthorImagesButton from "@/components/admin/shared/AuthorImagesButton";
 
 export const metadata = { title: "Blog Posts" };
 export const dynamic = "force-dynamic";
@@ -55,7 +56,10 @@ export default async function BlogPage({
       </div>
       <div className="flex items-center justify-between gap-4">
         <SearchInput placeholder="Search posts..." />
-        <BulkImageButton />
+        <div className="flex items-center gap-2 shrink-0">
+          <AuthorImagesButton />
+          <BulkImageButton />
+        </div>
       </div>
       <div className="bg-surface-container-lowest ghost-border rounded-xl overflow-hidden">
         <div className="overflow-x-auto">

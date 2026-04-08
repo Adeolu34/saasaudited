@@ -16,6 +16,8 @@ export interface IAiSettings extends Document {
   search_queries?: string[];
   // Image settings (global only)
   auto_generate_images?: boolean;
+  // Author images (authors config only)
+  author_images?: Record<string, string>;
 }
 
 const AiSettingsSchema = new Schema<IAiSettings>(
@@ -24,7 +26,7 @@ const AiSettingsSchema = new Schema<IAiSettings>(
       type: String,
       required: true,
       unique: true,
-      enum: ["global", "blog", "tool", "review", "comparison", "category"],
+      enum: ["global", "blog", "tool", "review", "comparison", "category", "authors"],
     },
     ai_model: String,
     temperature: Number,
@@ -35,6 +37,7 @@ const AiSettingsSchema = new Schema<IAiSettings>(
     search_enabled: Boolean,
     search_queries: [String],
     auto_generate_images: Boolean,
+    author_images: { type: Map, of: String },
   },
   { timestamps: true }
 );
