@@ -60,7 +60,18 @@ export default function BlogPostForm({ post }: { post?: BlogPostData }) {
   const [authorName, setAuthorName] = useState(post?.author?.name || "");
   const [authorImage, setAuthorImage] = useState(post?.author?.image || "");
   const [authorBio, setAuthorBio] = useState(post?.author?.bio || "");
+  const [authorsList, setAuthorsList] = useState<{ name: string; bio: string; image: string }[]>([]);
   const isEdit = Boolean(post?._id);
+
+  // Fetch available authors on mount
+  useEffect(() => {
+    fetch("/api/saasadmin/ai/authors")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.authors) setAuthorsList(data.authors);
+      })
+      .catch(() => {});
+  }, []);
 
   // On mount or when post data changes (e.g. AI data loaded), auto-extract TOC and read_time from content
   useEffect(() => {
@@ -245,16 +256,28 @@ export default function BlogPostForm({ post }: { post?: BlogPostData }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <label className="font-label text-xs uppercase tracking-widest text-on-surface-variant font-semibold">
-              Author Name <span className="text-error ml-0.5">*</span>
+              Author <span className="text-error ml-0.5">*</span>
             </label>
-            <input
+            <select
               name="author_name"
               value={authorName}
-              onChange={(e) => setAuthorName(e.target.value)}
+              onChange={(e) => {
+                const name = e.target.value;
+                setAuthorName(name);
+                const match = authorsList.find((a) => a.name === name);
+                if (match) {
+                  setAuthorBio(match.bio);
+                  if (match.image) setAuthorImage(match.image);
+                }
+              }}
               required
-              placeholder="Author name"
-              className="w-full px-4 py-2.5 bg-surface-container-low rounded-lg text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-shadow text-sm"
-            />
+              className="w-full px-4 py-2.5 bg-surface-container-low rounded-lg text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40 transition-shadow text-sm"
+            >
+              <option value="">Select an author</option>
+              {authorsList.map((a) => (
+                <option key={a.name} value={a.name}>{a.name}</option>
+              ))}
+            </select>
           </div>
           <div className="space-y-1.5">
             <label className="font-label text-xs uppercase tracking-widest text-on-surface-variant font-semibold">
