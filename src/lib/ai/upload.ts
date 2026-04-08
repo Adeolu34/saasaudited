@@ -10,9 +10,25 @@ function ensureConfig() {
       "CLOUDINARY_URL is required. Get it free at https://cloudinary.com/console"
     );
   }
-  // CLOUDINARY_URL format: cloudinary://API_KEY:API_SECRET@CLOUD_NAME
-  // The SDK auto-parses it from the env var
-  cloudinary.config({ secure: true });
+
+  // Explicitly parse CLOUDINARY_URL: cloudinary://API_KEY:API_SECRET@CLOUD_NAME
+  const match = url.match(
+    /cloudinary:\/\/([^:]+):([^@]+)@(.+)/
+  );
+  if (!match) {
+    throw new Error(
+      "Invalid CLOUDINARY_URL format. Expected: cloudinary://API_KEY:API_SECRET@CLOUD_NAME"
+    );
+  }
+
+  cloudinary.config({
+    cloud_name: match[3],
+    api_key: match[1],
+    api_secret: match[2],
+    secure: true,
+  });
+
+  console.log("[Cloudinary] Configured for cloud:", match[3]);
   configured = true;
 }
 
@@ -29,6 +45,8 @@ export async function uploadImageFromUrl(
 ): Promise<string> {
   ensureConfig();
 
+  console.log("[Cloudinary] Uploading image from:", sourceUrl.slice(0, 80));
+
   const result = await cloudinary.uploader.upload(sourceUrl, {
     folder: options?.folder || "saasaudited",
     public_id: options?.publicId,
@@ -37,6 +55,7 @@ export async function uploadImageFromUrl(
     transformation: [{ quality: "auto", fetch_format: "auto" }],
   });
 
+  console.log("[Cloudinary] Uploaded:", result.secure_url);
   return result.secure_url;
 }
 
@@ -44,5 +63,7 @@ export async function uploadImageFromUrl(
  * Check if Cloudinary is configured.
  */
 export function isCloudinaryConfigured(): boolean {
-  return Boolean(process.env.CLOUDINARY_URL);
+  const has = Boolean(process.env.CLOUDINARY_URL);
+  if (!has) console.log("[Cloudinary] CLOUDINARY_URL not set, skipping upload");
+  return has;
 }
