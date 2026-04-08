@@ -10,22 +10,22 @@ export async function generateImage(params: ImageGenerationParams): Promise<stri
   const replicate = getReplicate();
 
   const styleMap = {
-    blog: "modern minimalist tech blog header illustration, abstract geometric shapes, soft gradients, professional, clean design, no text, no letters, no words",
-    tool: "modern app icon logo design, minimalist, flat design, professional SaaS branding, single color palette, centered icon, no text, no letters",
+    blog: "dark navy blue background, futuristic technology concept art, glowing holographic 3D elements floating in space, neon blue and cyan accent lighting, digital globe or network nodes, sleek corporate tech aesthetic, cinematic lighting, depth of field, professional SaaS blog header, no text, no letters, no words, no writing",
+    tool: "dark navy background, single glowing holographic app icon, neon blue and cyan glow, futuristic 3D render, centered composition, sleek minimal SaaS branding, professional tech aesthetic, no text, no letters, no words",
   };
 
-  const prompt = `${styleMap[params.contentType]}, representing "${params.title}", high quality, 4k`;
+  const prompt = `${styleMap[params.contentType]}, concept: "${params.title}", ultra detailed, 8k render, octane render`;
 
   const output = await replicate.run(DEFAULT_IMAGE_MODEL as `${string}/${string}:${string}`, {
     input: {
       prompt,
       negative_prompt:
-        "text, watermark, signature, blurry, low quality, distorted, ugly, nsfw, letters, words, writing",
+        "text, watermark, signature, blurry, low quality, distorted, ugly, nsfw, letters, words, writing, typography, font, label, caption, bright white background, cartoon, clipart, amateur",
       width: params.contentType === "blog" ? 1200 : 512,
       height: params.contentType === "blog" ? 632 : 512,
       num_outputs: 1,
-      guidance_scale: 7.5,
-      num_inference_steps: 25,
+      guidance_scale: 8.5,
+      num_inference_steps: 30,
     },
   });
 
