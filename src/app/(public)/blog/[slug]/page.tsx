@@ -54,6 +54,17 @@ export default async function BlogPostPage({ params }: Props) {
   const post = await getBlogPost(slug);
   if (!post) notFound();
 
+  // Auto-extract TOC from content if not stored in DB
+  if ((!post.toc || post.toc.length === 0) && post.content) {
+    const tocRegex = /<h2[^>]+id=["']([^"']+)["'][^>]*>(.*?)<\/h2>/gi;
+    const toc: { title: string; anchor: string }[] = [];
+    let m;
+    while ((m = tocRegex.exec(post.content as string)) !== null) {
+      toc.push({ anchor: m[1], title: m[2].replace(/<[^>]+>/g, "").trim() });
+    }
+    if (toc.length > 0) post.toc = toc;
+  }
+
   await dbConnect();
   const relatedPosts = await BlogPost.find({ slug: { $ne: slug } })
     .sort({ published_at: -1 })
