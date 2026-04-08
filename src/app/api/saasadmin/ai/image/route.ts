@@ -20,9 +20,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (contentType !== "blog" && contentType !== "tool") {
+    if (contentType !== "blog" && contentType !== "tool" && contentType !== "author") {
       return NextResponse.json(
-        { error: "contentType must be 'blog' or 'tool'" },
+        { error: "contentType must be 'blog', 'tool', or 'author'" },
         { status: 400 }
       );
     }

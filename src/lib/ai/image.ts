@@ -3,7 +3,7 @@ import { uploadImageFromUrl, isCloudinaryConfigured } from "./upload";
 
 interface ImageGenerationParams {
   title: string;
-  contentType: "blog" | "tool";
+  contentType: "blog" | "tool" | "author";
 }
 
 export async function generateImage(params: ImageGenerationParams): Promise<string> {
@@ -12,17 +12,26 @@ export async function generateImage(params: ImageGenerationParams): Promise<stri
   const styleMap = {
     blog: "dark navy blue background, futuristic technology concept art, glowing holographic 3D elements floating in space, neon blue and cyan accent lighting, digital globe or network nodes, sleek corporate tech aesthetic, cinematic lighting, depth of field, professional SaaS blog header, no text, no letters, no words, no writing",
     tool: "dark navy background, single glowing holographic app icon, neon blue and cyan glow, futuristic 3D render, centered composition, sleek minimal SaaS branding, professional tech aesthetic, no text, no letters, no words",
+    author: "professional corporate headshot portrait, dark moody studio background, dramatic rim lighting, sharp focus on face, confident expression, business attire, photorealistic, high-end editorial photography, shallow depth of field",
   };
 
-  const prompt = `${styleMap[params.contentType]}, concept: "${params.title}", ultra detailed, 8k render, octane render`;
+  const prompt = params.contentType === "author"
+    ? `${styleMap.author}, person named "${params.title}", ultra detailed, 8k, studio photography`
+    : `${styleMap[params.contentType]}, concept: "${params.title}", ultra detailed, 8k render, octane render`;
+
+  const sizeMap = {
+    blog: { width: 1200, height: 632 },
+    tool: { width: 512, height: 512 },
+    author: { width: 512, height: 512 },
+  };
 
   const output = await replicate.run(DEFAULT_IMAGE_MODEL as `${string}/${string}:${string}`, {
     input: {
       prompt,
       negative_prompt:
-        "text, watermark, signature, blurry, low quality, distorted, ugly, nsfw, letters, words, writing, typography, font, label, caption, bright white background, cartoon, clipart, amateur",
-      width: params.contentType === "blog" ? 1200 : 512,
-      height: params.contentType === "blog" ? 632 : 512,
+        "text, watermark, signature, blurry, low quality, distorted, ugly, nsfw, letters, words, writing, typography, font, label, caption, bright white background, cartoon, clipart, amateur, deformed face, extra limbs",
+      width: sizeMap[params.contentType].width,
+      height: sizeMap[params.contentType].height,
       num_outputs: 1,
       guidance_scale: 8.5,
       num_inference_steps: 30,

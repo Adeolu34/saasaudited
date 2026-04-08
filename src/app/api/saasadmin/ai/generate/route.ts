@@ -11,6 +11,7 @@ import * as reviewPrompts from "@/lib/ai/prompts/review";
 import * as blogPrompts from "@/lib/ai/prompts/blog-post";
 import * as comparisonPrompts from "@/lib/ai/prompts/comparison";
 import * as categoryPrompts from "@/lib/ai/prompts/category";
+import { getRandomAuthor } from "@/lib/ai/authors";
 
 const promptMap = {
   tool: toolPrompts,
@@ -65,6 +66,11 @@ export async function POST(request: NextRequest) {
     // Split comma-separated keywords into array for blog prompts
     if (type === "blog" && params.keywords && typeof params.keywords === "string") {
       params.keywords = params.keywords.split(",").map((k: string) => k.trim()).filter(Boolean);
+    }
+
+    // Assign a random author for blog posts
+    if (type === "blog" && !params.author) {
+      params.author = getRandomAuthor();
     }
 
     // Resolve prompts: DB override or hardcoded default
