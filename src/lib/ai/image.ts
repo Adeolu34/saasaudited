@@ -40,7 +40,10 @@ export async function generateImage(params: ImageGenerationParams): Promise<stri
   if (typeof first === "string") {
     tempUrl = first;
   } else if (first && typeof first === "object" && "url" in first) {
-    tempUrl = String((first as { url: string | (() => string) }).url);
+    // FileOutput.url() returns a URL object — call it then convert to string
+    const urlVal = (first as Record<string, unknown>).url;
+    const resolved = typeof urlVal === "function" ? urlVal.call(first) : urlVal;
+    tempUrl = String(resolved);
   } else {
     tempUrl = String(first);
   }
