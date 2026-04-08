@@ -29,12 +29,25 @@ export async function generateImage(params: ImageGenerationParams): Promise<stri
     },
   });
 
-  const urls = output as string[];
-  if (!urls || urls.length === 0) {
+  // Replicate SDK v1.x returns FileOutput objects, not plain strings
+  const results = output as unknown[];
+  if (!results || results.length === 0) {
     throw new Error("Image generation returned no results");
   }
 
-  const tempUrl = urls[0];
+  const first = results[0];
+  let tempUrl: string;
+  if (typeof first === "string") {
+    tempUrl = first;
+  } else if (first && typeof first === "object" && "url" in first) {
+    tempUrl = String((first as { url: string | (() => string) }).url);
+  } else {
+    tempUrl = String(first);
+  }
+
+  if (!tempUrl || tempUrl === "[object Object]" || !tempUrl.startsWith("http")) {
+    throw new Error(`Image generation returned invalid URL: ${tempUrl}`);
+  }
 
   // Upload to Cloudinary for permanent storage (Replicate URLs expire)
   if (isCloudinaryConfigured()) {
