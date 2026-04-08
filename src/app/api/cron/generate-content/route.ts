@@ -7,7 +7,7 @@ import { parseAIResponse } from "@/lib/ai/parsers";
 import { getGlobalSettings, getPromptOverrides, interpolateTemplate } from "@/lib/ai/settings";
 import { discoverTrendingSaaS, formatSearchResultsForPrompt } from "@/lib/ai/search";
 import * as blogPrompts from "@/lib/ai/prompts/blog-post";
-import { getRandomAuthor } from "@/lib/ai/authors";
+import { getAuthorForType } from "@/lib/ai/authors";
 
 const DEFAULT_TOPIC_POOL = [
   "Best practices for evaluating SaaS tools in {year}",
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       systemPrompt = blogPrompts.buildSystemPrompt();
     }
 
-    const author = await getRandomAuthor();
+    const author = await getAuthorForType("blog");
 
     if (overrides?.userPromptTemplate) {
       userPrompt = interpolateTemplate(overrides.userPromptTemplate, {

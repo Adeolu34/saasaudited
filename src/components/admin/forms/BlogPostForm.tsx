@@ -57,6 +57,9 @@ export default function BlogPostForm({ post }: { post?: BlogPostData }) {
     typeof post?.featured_image === "string" ? post.featured_image : ""
   );
   const [generatingImage, setGeneratingImage] = useState(false);
+  const [authorName, setAuthorName] = useState(post?.author?.name || "");
+  const [authorImage, setAuthorImage] = useState(post?.author?.image || "");
+  const [authorBio, setAuthorBio] = useState(post?.author?.bio || "");
   const isEdit = Boolean(post?._id);
 
   // On mount or when post data changes (e.g. AI data loaded), auto-extract TOC and read_time from content
@@ -69,7 +72,10 @@ export default function BlogPostForm({ post }: { post?: BlogPostData }) {
       setReadTime(post.read_time || calcReadTime(post.content));
     }
     if (post?.featured_image && typeof post.featured_image === "string") setFeaturedImage(post.featured_image);
-  }, [post?.content, post?.toc, post?.read_time, post?.featured_image]);
+    if (post?.author?.name) setAuthorName(post.author.name);
+    if (post?.author?.image) setAuthorImage(post.author.image);
+    if (post?.author?.bio) setAuthorBio(post.author.bio);
+  }, [post?.content, post?.toc, post?.read_time, post?.featured_image, post?.author]);
 
   async function handleGenerateImage() {
     // Get the title from the form
@@ -128,9 +134,9 @@ export default function BlogPostForm({ post }: { post?: BlogPostData }) {
       title: form.get("title"),
       category: form.get("category"),
       author: {
-        name: form.get("author_name"),
-        image: form.get("author_image") || undefined,
-        bio: form.get("author_bio") || undefined,
+        name: authorName,
+        image: authorImage || undefined,
+        bio: authorBio || undefined,
       },
       excerpt: form.get("excerpt"),
       content,
@@ -237,10 +243,45 @@ export default function BlogPostForm({ post }: { post?: BlogPostData }) {
       <div className="bg-surface-container-lowest ghost-border rounded-xl p-6 space-y-5">
         <h3 className="font-headline text-lg font-bold text-on-surface">Author</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField label="Author Name" name="author_name" required defaultValue={post?.author?.name} placeholder="Author name" />
-          <FormField label="Author Image URL" name="author_image" defaultValue={post?.author?.image} placeholder="https://..." />
+          <div className="space-y-1.5">
+            <label className="font-label text-xs uppercase tracking-widest text-on-surface-variant font-semibold">
+              Author Name <span className="text-error ml-0.5">*</span>
+            </label>
+            <input
+              name="author_name"
+              value={authorName}
+              onChange={(e) => setAuthorName(e.target.value)}
+              required
+              placeholder="Author name"
+              className="w-full px-4 py-2.5 bg-surface-container-low rounded-lg text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-shadow text-sm"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="font-label text-xs uppercase tracking-widest text-on-surface-variant font-semibold">
+              Author Image URL
+            </label>
+            <input
+              name="author_image"
+              value={authorImage}
+              onChange={(e) => setAuthorImage(e.target.value)}
+              placeholder="https://..."
+              className="w-full px-4 py-2.5 bg-surface-container-low rounded-lg text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-shadow text-sm"
+            />
+          </div>
         </div>
-        <TextareaField label="Author Bio" name="author_bio" defaultValue={post?.author?.bio} rows={2} placeholder="Short bio..." />
+        <div className="space-y-1.5">
+          <label className="font-label text-xs uppercase tracking-widest text-on-surface-variant font-semibold">
+            Author Bio
+          </label>
+          <textarea
+            name="author_bio"
+            value={authorBio}
+            onChange={(e) => setAuthorBio(e.target.value)}
+            rows={2}
+            placeholder="Short bio..."
+            className="w-full px-4 py-2.5 bg-surface-container-low rounded-lg text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-shadow text-sm resize-y"
+          />
+        </div>
       </div>
 
       <div className="bg-surface-container-lowest ghost-border rounded-xl p-6 space-y-5">

@@ -36,10 +36,12 @@ export async function getAuthors(): Promise<Author[]> {
   }
 }
 
-/** Pick a random author (with DB images if available) */
-export async function getRandomAuthor(): Promise<Author> {
+/** Get author by content type: Maya Chen for blogs, Daniel Okafor for tools/comparisons */
+export async function getAuthorForType(type: "blog" | "tool" | "review" | "comparison" | "category"): Promise<Author> {
   const authors = await getAuthors();
-  return authors[Math.floor(Math.random() * authors.length)];
+  const maya = authors.find((a) => a.name === "Maya Chen") || authors[0];
+  const daniel = authors.find((a) => a.name === "Daniel Okafor") || authors[1] || authors[0];
+  return type === "blog" ? maya : daniel;
 }
 
 /** Save an author image URL to the DB */
