@@ -91,11 +91,16 @@ export default function BlogPostForm({ post }: { post?: BlogPostData }) {
   async function handleGenerateImage() {
     // Get the title from the form
     const titleInput = document.querySelector<HTMLInputElement>('input[name="title"]');
+    const excerptInput = document.querySelector<HTMLTextAreaElement>('textarea[name="excerpt"]');
+    const contentInput = document.querySelector<HTMLTextAreaElement>('textarea[name="content"]');
     const title = titleInput?.value?.trim();
     if (!title) {
       setError("Enter a post title first so we can generate a relevant image.");
       return;
     }
+    const excerpt = excerptInput?.value?.trim() || "";
+    const contentSample = (contentInput?.value || "").replace(/<[^>]+>/g, " ").slice(0, 700);
+    const context = [excerpt, contentSample].filter(Boolean).join(" | ");
 
     setGeneratingImage(true);
     setError("");
@@ -103,7 +108,7 @@ export default function BlogPostForm({ post }: { post?: BlogPostData }) {
       const res = await fetch("/api/saasadmin/ai/image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, contentType: "blog" }),
+        body: JSON.stringify({ title, contentType: "blog", context, variant: "featured" }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Image generation failed");

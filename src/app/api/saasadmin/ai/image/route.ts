@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { title, contentType } = await request.json();
+    const { title, contentType, context, variant } = await request.json();
 
     if (!title || !contentType) {
       return NextResponse.json(
@@ -27,7 +27,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const url = await generateImage({ title, contentType });
+    if (variant && variant !== "featured" && variant !== "inline") {
+      return NextResponse.json(
+        { error: "variant must be 'featured' or 'inline'" },
+        { status: 400 }
+      );
+    }
+
+    const url = await generateImage({ title, contentType, context, variant });
     return NextResponse.json({ url });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Image generation failed";

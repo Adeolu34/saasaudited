@@ -6,6 +6,7 @@ import { checkRateLimit } from "@/lib/ai/rate-limiter";
 import { getGlobalSettings, getPromptOverrides, interpolateTemplate } from "@/lib/ai/settings";
 import { searchSaaS, formatSearchResultsForPrompt } from "@/lib/ai/search";
 import { generateImage } from "@/lib/ai/image";
+import { buildBlogImageContext, insertInlineImageIntoBlogContent } from "@/lib/ai/blog-images";
 import * as toolPrompts from "@/lib/ai/prompts/tool";
 import * as reviewPrompts from "@/lib/ai/prompts/review";
 import * as blogPrompts from "@/lib/ai/prompts/blog-post";
@@ -125,10 +126,46 @@ export async function POST(request: NextRequest) {
           const imageUrl = await generateImage({
             title,
             contentType: type as "blog" | "tool",
+            variant: "featured",
+            context:
+              type === "blog"
+                ? buildBlogImageContext({
+                    title,
+                    category: typeof data.category === "string" ? data.category : undefined,
+                    excerpt: typeof data.excerpt === "string" ? data.excerpt : undefined,
+                    content: typeof data.content === "string" ? data.content : undefined,
+                    tags: Array.isArray(data.tags)
+                      ? (data.tags.filter((tag): tag is string => typeof tag === "string").slice(0, 6))
+                      : undefined,
+                  })
+                : undefined,
           });
           data.featured_image = imageUrl;
           if (type === "tool") data.logo_url = imageUrl;
           imageGenerated = true;
+
+          // For blog posts, generate one additional inline image and insert it in the middle of the post.
+          if (type === "blog" && typeof data.content === "string" && data.content.trim()) {
+            const inlineImageUrl = await generateImage({
+              title: `${title} (inline)`,
+              contentType: "blog",
+              variant: "inline",
+              context: buildBlogImageContext({
+                title,
+                category: typeof data.category === "string" ? data.category : undefined,
+                excerpt: typeof data.excerpt === "string" ? data.excerpt : undefined,
+                content: data.content,
+                tags: Array.isArray(data.tags)
+                  ? (data.tags.filter((tag): tag is string => typeof tag === "string").slice(0, 6))
+                  : undefined,
+              }),
+            });
+            data.content = insertInlineImageIntoBlogContent(
+              data.content,
+              inlineImageUrl,
+              `Illustration for ${title}`
+            );
+          }
         }
       } catch (imgErr) {
         console.error("[AI Generate] Image generation failed:", imgErr);

@@ -8,6 +8,7 @@ import { getGlobalSettings, getPromptOverrides, interpolateTemplate } from "@/li
 import { discoverTrendingSaaS, formatSearchResultsForPrompt } from "@/lib/ai/search";
 import * as blogPrompts from "@/lib/ai/prompts/blog-post";
 import { getAuthorForType } from "@/lib/ai/authors";
+import { buildBlogImageContext, insertInlineImageIntoBlogContent } from "@/lib/ai/blog-images";
 
 const DEFAULT_TOPIC_POOL = [
   "Best practices for evaluating SaaS tools in {year}",
@@ -119,11 +120,45 @@ export async function POST(request: NextRequest) {
     // Generate featured image
     if (settings.auto_generate_images) {
       try {
+        const title = blogData.title as string;
         const imageUrl = await generateImage({
-          title: blogData.title as string,
+          title,
           contentType: "blog",
+          variant: "featured",
+          context: buildBlogImageContext({
+            title,
+            category: typeof blogData.category === "string" ? blogData.category : undefined,
+            excerpt: typeof blogData.excerpt === "string" ? blogData.excerpt : undefined,
+            content: typeof blogData.content === "string" ? blogData.content : undefined,
+            tags: Array.isArray(blogData.tags)
+              ? blogData.tags.filter((tag): tag is string => typeof tag === "string").slice(0, 6)
+              : undefined,
+          }),
         });
         blogData.featured_image = imageUrl;
+
+        // Add a second inline image inside the post body.
+        if (typeof blogData.content === "string" && blogData.content.trim()) {
+          const inlineImageUrl = await generateImage({
+            title: `${title} (inline)`,
+            contentType: "blog",
+            variant: "inline",
+            context: buildBlogImageContext({
+              title,
+              category: typeof blogData.category === "string" ? blogData.category : undefined,
+              excerpt: typeof blogData.excerpt === "string" ? blogData.excerpt : undefined,
+              content: blogData.content,
+              tags: Array.isArray(blogData.tags)
+                ? blogData.tags.filter((tag): tag is string => typeof tag === "string").slice(0, 6)
+                : undefined,
+            }),
+          });
+          blogData.content = insertInlineImageIntoBlogContent(
+            blogData.content,
+            inlineImageUrl,
+            `Illustration for ${title}`
+          );
+        }
       } catch (imgErr) {
         console.error("[Cron] Image generation failed, publishing without image:", imgErr);
       }

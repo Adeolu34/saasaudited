@@ -4,37 +4,53 @@ import { uploadImageFromUrl, isCloudinaryConfigured } from "./upload";
 interface ImageGenerationParams {
   title: string;
   contentType: "blog" | "tool" | "author";
+  context?: string;
+  variant?: "featured" | "inline";
 }
 
 export async function generateImage(params: ImageGenerationParams): Promise<string> {
   const replicate = getReplicate();
 
   const styleMap = {
-    blog: "dark navy blue background, futuristic technology concept art, glowing holographic 3D elements floating in space, neon blue and cyan accent lighting, digital globe or network nodes, sleek corporate tech aesthetic, cinematic lighting, depth of field, professional SaaS blog header, no text, no letters, no words, no writing",
-    tool: "dark navy background, single glowing holographic app icon, neon blue and cyan glow, futuristic 3D render, centered composition, sleek minimal SaaS branding, professional tech aesthetic, no text, no letters, no words",
-    author: "professional corporate headshot portrait, dark moody studio background, dramatic rim lighting, sharp focus on face, confident expression, business attire, photorealistic, high-end editorial photography, shallow depth of field",
+    blog:
+      "clean modern SaaS editorial illustration, premium digital magazine style, polished lighting, balanced composition, rich but not oversaturated colors, visually clear focal point, professional and trustworthy, high detail, no text overlays",
+    tool:
+      "clean product hero illustration, modern SaaS UI-inspired composition, subtle gradients, precise lighting, minimal clutter, high-detail 3d style, no text overlays",
+    author:
+      "professional corporate headshot portrait, clean studio background, sharp focus on face, confident expression, business attire, natural skin tones, photorealistic",
   };
 
-  const prompt = params.contentType === "author"
-    ? `${styleMap.author}, person named "${params.title}", ultra detailed, 8k, studio photography`
-    : `${styleMap[params.contentType]}, concept: "${params.title}", ultra detailed, 8k render, octane render`;
+  const context = params.context ? ` Story context: ${params.context}.` : "";
+  const blogVariantHint =
+    params.contentType === "blog" && params.variant === "inline"
+      ? " Create an explanatory supporting scene suitable for in-article placement, not a title banner."
+      : " Create a high-impact hero composition suitable for a blog featured image.";
+
+  const prompt =
+    params.contentType === "author"
+      ? `${styleMap.author}, person named "${params.title}", ultra detailed, high-end editorial photography`
+      : `${styleMap[params.contentType]}, concept: "${params.title}".${context}${blogVariantHint}`;
 
   const sizeMap = {
     blog: { width: 1200, height: 632 },
     tool: { width: 512, height: 512 },
     author: { width: 512, height: 512 },
   };
+  const dimensions =
+    params.contentType === "blog" && params.variant === "inline"
+      ? { width: 1200, height: 675 }
+      : sizeMap[params.contentType];
 
-  const output = await replicate.run(DEFAULT_IMAGE_MODEL as `${string}/${string}:${string}`, {
+  const output = await replicate.run(DEFAULT_IMAGE_MODEL, {
     input: {
       prompt,
       negative_prompt:
-        "text, watermark, signature, blurry, low quality, distorted, ugly, nsfw, letters, words, writing, typography, font, label, caption, bright white background, cartoon, clipart, amateur, deformed face, extra limbs",
-      width: sizeMap[params.contentType].width,
-      height: sizeMap[params.contentType].height,
+        "text, watermark, signature, blurry, low quality, distorted, ugly, nsfw, letters, words, writing, typography, font, label, caption, logo, noisy background, low contrast, jpeg artifacts",
+      width: dimensions.width,
+      height: dimensions.height,
       num_outputs: 1,
-      guidance_scale: 8.5,
-      num_inference_steps: 30,
+      guidance_scale: 7,
+      num_inference_steps: 35,
     },
   });
 
