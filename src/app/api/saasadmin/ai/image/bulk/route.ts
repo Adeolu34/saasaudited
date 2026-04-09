@@ -36,7 +36,7 @@ export async function POST() {
           excerpt: typeof post.excerpt === "string" ? post.excerpt : undefined,
           content: typeof post.content === "string" ? post.content : undefined,
           tags: Array.isArray(post.tags)
-            ? post.tags.filter((tag): tag is string => typeof tag === "string").slice(0, 6)
+            ? post.tags.filter((tag: unknown): tag is string => typeof tag === "string").slice(0, 6)
             : undefined,
         });
 

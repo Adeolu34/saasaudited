@@ -41,7 +41,7 @@ export async function generateImage(params: ImageGenerationParams): Promise<stri
       ? { width: 1200, height: 675 }
       : sizeMap[params.contentType];
 
-  const output = await replicate.run(DEFAULT_IMAGE_MODEL, {
+  const output = await replicate.run(DEFAULT_IMAGE_MODEL as `${string}/${string}:${string}`, {
     input: {
       prompt,
       negative_prompt:
