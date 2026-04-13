@@ -57,6 +57,7 @@ export default function BlogPostForm({ post }: { post?: BlogPostData }) {
     typeof post?.featured_image === "string" ? post.featured_image : ""
   );
   const [generatingImage, setGeneratingImage] = useState(false);
+  const [generatingInline, setGeneratingInline] = useState(false);
   const [authorName, setAuthorName] = useState(post?.author?.name || "");
   const [authorImage, setAuthorImage] = useState(post?.author?.image || "");
   const [authorBio, setAuthorBio] = useState(post?.author?.bio || "");
@@ -117,6 +118,68 @@ export default function BlogPostForm({ post }: { post?: BlogPostData }) {
       setError(err instanceof Error ? err.message : "Image generation failed");
     } finally {
       setGeneratingImage(false);
+    }
+  }
+
+  async function handleGenerateInlineImage() {
+    const titleInput = document.querySelector<HTMLInputElement>('input[name="title"]');
+    const contentInput = document.querySelector<HTMLTextAreaElement>('textarea[name="content"]');
+    const title = titleInput?.value?.trim();
+    const content = contentInput?.value?.trim();
+    if (!title) {
+      setError("Enter a post title first.");
+      return;
+    }
+    if (!content) {
+      setError("The post needs content before adding an inline image.");
+      return;
+    }
+
+    setGeneratingInline(true);
+    setError("");
+    try {
+      const excerptInput = document.querySelector<HTMLTextAreaElement>('textarea[name="excerpt"]');
+      const excerpt = excerptInput?.value?.trim() || "";
+      const contentSample = content.replace(/<[^>]+>/g, " ").slice(0, 700);
+      const context = [excerpt, contentSample].filter(Boolean).join(" | ");
+
+      const res = await fetch("/api/saasadmin/ai/image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: `${title} (inline)`, contentType: "blog", context, variant: "inline" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Image generation failed");
+
+      // Strip any existing inline image first, then insert new one
+      let cleaned = content.replace(/<figure class="post-inline-image">[\s\S]*?<\/figure>\s*/g, "");
+      const figure = `<figure class="post-inline-image"><img src="${data.url}" alt="Illustration for ${title.replace(/"/g, "&quot;")}" loading="lazy" /><figcaption>Illustration for ${title.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</figcaption></figure>`;
+
+      // Insert before the middle h2
+      const headingRegex = /<h2\b[^>]*>[\s\S]*?<\/h2>/gi;
+      const headingMatches = Array.from(cleaned.matchAll(headingRegex));
+      if (headingMatches.length >= 2) {
+        const mid = headingMatches[Math.floor(headingMatches.length / 2)];
+        if (mid.index !== undefined) {
+          cleaned = cleaned.slice(0, mid.index) + figure + "\n\n" + cleaned.slice(mid.index);
+        } else {
+          cleaned = cleaned + "\n\n" + figure;
+        }
+      } else {
+        cleaned = cleaned + "\n\n" + figure;
+      }
+
+      // Update the textarea
+      if (contentInput) {
+        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value")?.set;
+        nativeInputValueSetter?.call(contentInput, cleaned);
+        contentInput.dispatchEvent(new Event("input", { bubbles: true }));
+        contentInput.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Inline image generation failed");
+    } finally {
+      setGeneratingInline(false);
     }
   }
 
@@ -313,7 +376,22 @@ export default function BlogPostForm({ post }: { post?: BlogPostData }) {
       </div>
 
       <div className="bg-surface-container-lowest ghost-border rounded-xl p-6 space-y-5">
-        <h3 className="font-headline text-lg font-bold text-on-surface">Content</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="font-headline text-lg font-bold text-on-surface">Content</h3>
+          <button
+            type="button"
+            onClick={handleGenerateInlineImage}
+            disabled={generatingInline || generatingImage}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-violet-600 text-white hover:bg-violet-700 disabled:opacity-50 transition-colors"
+          >
+            {generatingInline ? (
+              <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
+            ) : (
+              <span className="material-symbols-outlined text-sm">add_photo_alternate</span>
+            )}
+            {generatingInline ? "Generating..." : "Add Inline Image"}
+          </button>
+        </div>
         <TextareaField label="Content (HTML)" name="content" required defaultValue={post?.content} rows={16} placeholder="<h2>Introduction</h2>..." onChange={handleContentChange} />
         <TagInput label="Tags" name="tags" defaultValue={post?.tags} placeholder="Add a tag and press Enter" />
 
