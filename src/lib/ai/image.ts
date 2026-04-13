@@ -12,65 +12,96 @@ export async function generateImage(params: ImageGenerationParams): Promise<stri
   const replicate = getReplicate();
 
   const styleMap = {
-    blog:
-      "clean modern SaaS editorial illustration, premium digital magazine style, polished lighting, balanced composition, rich but not oversaturated colors, visually clear focal point, professional and trustworthy, high detail, no text overlays",
-    tool:
-      "clean product hero illustration, modern SaaS UI-inspired composition, subtle gradients, precise lighting, minimal clutter, high-detail 3d style, no text overlays",
-    author:
-      "professional corporate headshot portrait, clean studio background, sharp focus on face, confident expression, business attire, natural skin tones, photorealistic",
-  };
-
-  const context = params.context ? ` Story context: ${params.context}.` : "";
-  const blogVariantHint =
-    params.contentType === "blog" && params.variant === "inline"
-      ? " Create an explanatory supporting scene suitable for in-article placement, not a title banner."
-      : " Create a high-impact hero composition suitable for a blog featured image.";
-
-  const prompt =
-    params.contentType === "author"
-      ? `${styleMap.author}, person named "${params.title}", ultra detailed, high-end editorial photography`
-      : `${styleMap[params.contentType]}, concept: "${params.title}".${context}${blogVariantHint}`;
-
-  const sizeMap = {
-    blog: { width: 1200, height: 632 },
-    tool: { width: 512, height: 512 },
-    author: { width: 512, height: 512 },
-  };
-  const dimensions =
-    params.contentType === "blog" && params.variant === "inline"
-      ? { width: 1200, height: 675 }
-      : sizeMap[params.contentType];
-
-  const output = await replicate.run(DEFAULT_IMAGE_MODEL as `${string}/${string}:${string}`, {
-    input: {
-      prompt,
-      negative_prompt:
-        "text, watermark, signature, blurry, low quality, distorted, ugly, nsfw, letters, words, writing, typography, font, label, caption, logo, noisy background, low contrast, jpeg artifacts",
-      width: dimensions.width,
-      height: dimensions.height,
-      num_outputs: 1,
-      guidance_scale: 7,
-      num_inference_steps: 35,
+    blog: {
+      featured:
+        "Professional editorial photograph for a technology magazine cover. Clean, modern composition with dramatic lighting. Abstract geometric shapes representing software and cloud technology. Rich jewel-tone color palette with deep blues, teals, and warm accents. Sharp focus, shallow depth of field. No text, no watermarks, no logos, no words, no letters.",
+      inline:
+        "Clean explanatory diagram-style illustration for a technology article. Isometric perspective showing interconnected software interfaces and data flow. Soft natural lighting, muted professional color palette. Informational and clear, not decorative. No text, no watermarks, no logos, no words, no letters.",
     },
-  });
+    tool:
+      "Minimal product visualization of a modern SaaS application interface. Clean white background, subtle shadows, floating UI elements with soft gradients. Professional product photography style. Sharp, high contrast, premium feel. No text, no watermarks, no logos, no words, no letters.",
+    author:
+      "Professional corporate headshot portrait. Clean studio background with subtle gradient. Sharp focus on face, confident and approachable expression, business attire. Natural skin tones, soft studio lighting. Photorealistic, high detail. No text, no watermarks.",
+  };
 
-  // Replicate SDK v1.x returns FileOutput objects, not plain strings
-  const results = output as unknown[];
-  if (!results || results.length === 0) {
-    throw new Error("Image generation returned no results");
+  const context = params.context ? ` Scene context: ${params.context}.` : "";
+
+  let prompt: string;
+  if (params.contentType === "author") {
+    prompt = `${styleMap.author} Person: "${params.title}". Ultra detailed, editorial photography quality.`;
+  } else if (params.contentType === "blog") {
+    const variant = params.variant === "inline" ? "inline" : "featured";
+    prompt = `${styleMap.blog[variant]} Topic: "${params.title}".${context}`;
+  } else {
+    prompt = `${styleMap.tool} Product concept: "${params.title}".${context}`;
   }
 
-  const first = results[0];
+  const aspectMap = {
+    blog: { featured: "16:9", inline: "16:9" },
+    tool: { featured: "1:1", inline: "1:1" },
+    author: { featured: "1:1", inline: "1:1" },
+  };
+
+  const aspect =
+    aspectMap[params.contentType]?.[params.variant || "featured"] || "16:9";
+
+  // FLUX models use a different input shape than SDXL
+  const isFlux = DEFAULT_IMAGE_MODEL.includes("flux");
+
+  const input = isFlux
+    ? {
+        prompt,
+        aspect_ratio: aspect,
+        output_format: "webp",
+        output_quality: 90,
+        safety_tolerance: 2,
+        prompt_upsampling: true,
+      }
+    : {
+        // Fallback for SDXL-style models
+        prompt,
+        negative_prompt:
+          "text, watermark, signature, blurry, low quality, distorted, ugly, nsfw, letters, words, writing, typography, font, label, caption, logo, noisy background, low contrast, jpeg artifacts",
+        width: params.contentType === "blog" ? 1200 : 512,
+        height:
+          params.contentType === "blog"
+            ? params.variant === "inline"
+              ? 675
+              : 632
+            : 512,
+        num_outputs: 1,
+        guidance_scale: 7,
+        num_inference_steps: 35,
+      };
+
+  const output = await replicate.run(
+    DEFAULT_IMAGE_MODEL as `${string}/${string}` | `${string}/${string}:${string}`,
+    { input }
+  );
+
+  // Handle different output formats: FLUX returns a single URL or FileOutput,
+  // SDXL returns an array of URLs/FileOutputs.
   let tempUrl: string;
-  if (typeof first === "string") {
-    tempUrl = first;
-  } else if (first && typeof first === "object" && "url" in first) {
-    // FileOutput.url() returns a URL object — call it then convert to string
-    const urlVal = (first as Record<string, unknown>).url;
-    const resolved = typeof urlVal === "function" ? urlVal.call(first) : urlVal;
+
+  if (typeof output === "string") {
+    tempUrl = output;
+  } else if (output && typeof output === "object" && "url" in output) {
+    const urlVal = (output as Record<string, unknown>).url;
+    const resolved = typeof urlVal === "function" ? urlVal.call(output) : urlVal;
     tempUrl = String(resolved);
+  } else if (Array.isArray(output) && output.length > 0) {
+    const first = output[0];
+    if (typeof first === "string") {
+      tempUrl = first;
+    } else if (first && typeof first === "object" && "url" in first) {
+      const urlVal = (first as Record<string, unknown>).url;
+      const resolved = typeof urlVal === "function" ? urlVal.call(first) : urlVal;
+      tempUrl = String(resolved);
+    } else {
+      tempUrl = String(first);
+    }
   } else {
-    tempUrl = String(first);
+    tempUrl = String(output);
   }
 
   if (!tempUrl || tempUrl === "[object Object]" || !tempUrl.startsWith("http")) {
@@ -85,9 +116,10 @@ export async function generateImage(params: ImageGenerationParams): Promise<stri
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-|-$/g, "")
         .slice(0, 60);
+      const variantSuffix = params.variant === "inline" ? "-inline" : "";
       const permanentUrl = await uploadImageFromUrl(tempUrl, {
         folder: `saasaudited/${params.contentType}s`,
-        publicId: slug,
+        publicId: `${slug}${variantSuffix}`,
       });
       return permanentUrl;
     } catch (err) {

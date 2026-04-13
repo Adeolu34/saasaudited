@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import BlogPost from "@/lib/models/BlogPost";
+import { submitUrlToIndexNow } from "@/lib/indexnow";
+
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://saasaudited.com";
 
 export async function GET(request: NextRequest) {
   await dbConnect();
@@ -37,6 +40,12 @@ export async function POST(request: NextRequest) {
     await dbConnect();
     const body = sanitizeBody(await request.json());
     const post = await BlogPost.create(body);
+
+    // Notify search engines if the post is published (not a draft)
+    if (post.slug && post.status !== "draft") {
+      submitUrlToIndexNow(`${BASE_URL}/blog/${post.slug}`).catch(() => {});
+    }
+
     return NextResponse.json({ post }, { status: 201 });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to create";

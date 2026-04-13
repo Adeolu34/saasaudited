@@ -12,6 +12,7 @@ export interface IBlogPost extends Document {
   toc: { title: string; anchor: string }[];
   read_time: number;
   is_featured: boolean;
+  status: "draft" | "published";
   published_at: Date;
 }
 
@@ -32,6 +33,7 @@ const BlogPostSchema = new Schema<IBlogPost>(
     toc: [{ title: String, anchor: String }],
     read_time: { type: Number, default: 5 },
     is_featured: { type: Boolean, default: false },
+    status: { type: String, enum: ["draft", "published"], default: "published" },
     published_at: { type: Date, default: Date.now },
   },
   { timestamps: true }
@@ -39,6 +41,7 @@ const BlogPostSchema = new Schema<IBlogPost>(
 
 BlogPostSchema.index({ is_featured: 1 });
 BlogPostSchema.index({ published_at: -1 });
+BlogPostSchema.index({ status: 1, published_at: -1 });
 
 export default mongoose.models.BlogPost ||
   mongoose.model<IBlogPost>("BlogPost", BlogPostSchema);

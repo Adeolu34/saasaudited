@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import BlogPost from "@/lib/models/BlogPost";
+import { submitUrlToIndexNow } from "@/lib/indexnow";
+
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://saasaudited.com";
 
 export async function GET(
   _request: NextRequest,
@@ -38,9 +41,22 @@ export async function PUT(
     await dbConnect();
     const { id } = await params;
     const body = sanitizeBody(await request.json());
+
+    // Check if this update is publishing a draft (status changing to "published")
+    const previousPost = await BlogPost.findById(id, { status: 1, slug: 1 }).lean();
+    const isPublishing =
+      previousPost?.status === "draft" &&
+      (body.status === "published" || (!body.status && previousPost.status === "draft"));
+
     const post = await BlogPost.findByIdAndUpdate(id, body, { new: true, runValidators: true }).lean();
     if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    return NextResponse.json({ post });
+
+    // Notify search engines when a post is published or updated
+    if (post.slug && post.status !== "draft") {
+      submitUrlToIndexNow(`${BASE_URL}/blog/${post.slug}`).catch(() => {});
+    }
+
+    return NextResponse.json({ post, published: isPublishing });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to update";
     return NextResponse.json({ error: message }, { status: 400 });

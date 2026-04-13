@@ -17,7 +17,7 @@ export const getReviewAndTool = cache(async (slug: string) => {
 
 export const getBlogPost = cache(async (slug: string) => {
   await dbConnect();
-  return BlogPost.findOne({ slug }).lean();
+  return BlogPost.findOne({ slug, status: { $ne: "draft" } }).lean();
 });
 
 export const getCategory = cache(async (slug: string) => {

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Review from "@/lib/models/Review";
+import { submitUrlToIndexNow } from "@/lib/indexnow";
+
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://saasaudited.com";
 
 export async function GET(request: NextRequest) {
   await dbConnect();
@@ -20,6 +23,12 @@ export async function POST(request: NextRequest) {
     await dbConnect();
     const body = await request.json();
     const review = await Review.create(body);
+
+    // Notify search engines about new review page
+    if (review.slug) {
+      submitUrlToIndexNow(`${BASE_URL}/reviews/${review.slug}`).catch(() => {});
+    }
+
     return NextResponse.json({ review }, { status: 201 });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to create";

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Tool from "@/lib/models/Tool";
+import { submitUrlToIndexNow } from "@/lib/indexnow";
+
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://saasaudited.com";
 
 export async function GET(
   _request: NextRequest,
@@ -27,6 +30,12 @@ export async function PUT(
     }).lean();
     if (!tool)
       return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+    // Notify search engines
+    if (tool.slug) {
+      submitUrlToIndexNow(`${BASE_URL}/reviews/${tool.slug}`).catch(() => {});
+    }
+
     return NextResponse.json({ tool });
   } catch (err: unknown) {
     const message =

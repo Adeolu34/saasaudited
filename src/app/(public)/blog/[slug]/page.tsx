@@ -16,7 +16,7 @@ interface Props {
 
 export async function generateStaticParams() {
   await dbConnect();
-  const posts = await BlogPost.find({}, { slug: 1 }).lean();
+  const posts = await BlogPost.find({ status: { $ne: "draft" } }, { slug: 1 }).lean();
   return posts.map((p) => ({ slug: p.slug }));
 }
 
@@ -66,7 +66,7 @@ export default async function BlogPostPage({ params }: Props) {
   }
 
   await dbConnect();
-  const relatedPosts = await BlogPost.find({ slug: { $ne: slug } })
+  const relatedPosts = await BlogPost.find({ slug: { $ne: slug }, status: { $ne: "draft" } })
     .sort({ published_at: -1 })
     .limit(3)
     .lean();

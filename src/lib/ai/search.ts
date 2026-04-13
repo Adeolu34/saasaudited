@@ -81,6 +81,25 @@ export async function discoverTrendingSaaS(): Promise<SearchResults> {
   return searchSaaS(query);
 }
 
+/**
+ * Deep research: runs 3 targeted searches for richer context.
+ * 1. Main topic search
+ * 2. Statistics and data search
+ * 3. Expert analysis and trends search
+ */
+export async function deepResearch(topic: string): Promise<SearchResults[]> {
+  const year = new Date().getFullYear();
+
+  const queries = [
+    `${topic} ${year}`,
+    `${topic} statistics data market size ${year}`,
+    `${topic} expert analysis trends predictions ${year}`,
+  ];
+
+  const results = await Promise.all(queries.map((q) => searchSaaS(q)));
+  return results;
+}
+
 export function formatSearchResultsForPrompt(search: SearchResults): string {
   if (!search.results.length) return "";
 
@@ -90,4 +109,16 @@ export function formatSearchResultsForPrompt(search: SearchResults): string {
   );
 
   return `\n\n--- WEB RESEARCH CONTEXT (search: "${search.query}") ---\nUse these real, current search results to inform your content with accurate data:\n${lines.join("\n")}\n--- END RESEARCH CONTEXT ---`;
+}
+
+/**
+ * Format multiple search results into a combined research block.
+ */
+export function formatDeepResearchForPrompt(searches: SearchResults[]): string {
+  const blocks = searches
+    .map((s) => formatSearchResultsForPrompt(s))
+    .filter(Boolean);
+
+  if (blocks.length === 0) return "";
+  return blocks.join("\n");
 }

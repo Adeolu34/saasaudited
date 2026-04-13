@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
-import Review from "@/lib/models/Review";
-import { submitUrlToIndexNow } from "@/lib/indexnow";
-
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://saasaudited.com";
+import Research from "@/lib/models/Research";
 
 export async function GET(
   _request: NextRequest,
@@ -11,9 +8,9 @@ export async function GET(
 ) {
   await dbConnect();
   const { id } = await params;
-  const review = await Review.findById(id).lean();
-  if (!review) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json({ review });
+  const research = await Research.findById(id).lean();
+  if (!research) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  return NextResponse.json({ research });
 }
 
 export async function PUT(
@@ -24,15 +21,14 @@ export async function PUT(
     await dbConnect();
     const { id } = await params;
     const body = await request.json();
-    const review = await Review.findByIdAndUpdate(id, body, { new: true, runValidators: true }).lean();
-    if (!review) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    // Notify search engines
-    if (review.slug) {
-      submitUrlToIndexNow(`${BASE_URL}/reviews/${review.slug}`).catch(() => {});
-    }
+    const research = await Research.findByIdAndUpdate(id, body, {
+      new: true,
+      runValidators: true,
+    }).lean();
 
-    return NextResponse.json({ review });
+    if (!research) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ research });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to update";
     return NextResponse.json({ error: message }, { status: 400 });
@@ -45,7 +41,7 @@ export async function DELETE(
 ) {
   await dbConnect();
   const { id } = await params;
-  const result = await Review.findByIdAndDelete(id);
+  const result = await Research.findByIdAndDelete(id);
   if (!result) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json({ success: true });
 }

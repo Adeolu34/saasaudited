@@ -38,14 +38,16 @@ export default async function BlogIndex({ searchParams }: Props) {
   const params = await searchParams;
   const page = Math.max(1, parseInt(params.page || "1"));
 
+  const publishedFilter = { status: { $ne: "draft" } };
+
   const [posts, total, featured] = await Promise.all([
-    BlogPost.find()
+    BlogPost.find(publishedFilter)
       .sort({ published_at: -1 })
       .skip((page - 1) * PER_PAGE)
       .limit(PER_PAGE)
       .lean(),
-    BlogPost.countDocuments(),
-    BlogPost.findOne({ is_featured: true }).lean(),
+    BlogPost.countDocuments(publishedFilter),
+    BlogPost.findOne({ is_featured: true, ...publishedFilter }).lean(),
   ]);
 
   const totalPages = Math.ceil(total / PER_PAGE);

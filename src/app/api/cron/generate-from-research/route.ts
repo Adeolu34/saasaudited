@@ -1,38 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
+import Research from "@/lib/models/Research";
 import BlogPost from "@/lib/models/BlogPost";
 import { getOpenAI } from "@/lib/ai/openai";
 import { generateImage } from "@/lib/ai/image";
 import { parseAIResponse } from "@/lib/ai/parsers";
 import { getGlobalSettings, getPromptOverrides, interpolateTemplate } from "@/lib/ai/settings";
-import { deepResearch, formatDeepResearchForPrompt, discoverTrendingSaaS, formatSearchResultsForPrompt } from "@/lib/ai/search";
 import * as blogPrompts from "@/lib/ai/prompts/blog-post";
 import { getAuthorForType } from "@/lib/ai/authors";
 import { buildBlogImageContext, insertInlineImageIntoBlogContent } from "@/lib/ai/blog-images";
 
-const DEFAULT_TOPIC_POOL = [
-  "Best practices for evaluating SaaS tools in {year}",
-  "How to reduce SaaS spend without sacrificing productivity",
-  "Top emerging SaaS categories to watch in {year}",
-  "SaaS security checklist for B2B buyers",
-  "How to build an effective SaaS stack for startups",
-  "The hidden costs of free SaaS tools",
-  "When to switch SaaS providers: signs it is time to move on",
-  "How AI is transforming B2B software in {year}",
-  "Remote team collaboration tools: what actually works",
-  "SaaS onboarding mistakes that kill adoption rates",
-  "How to run a proper SaaS vendor evaluation",
-  "The rise of vertical SaaS: industry-specific tools worth watching",
-  "Data migration between SaaS platforms: a practical guide",
-  "Why SaaS pricing is getting more complex and what to do about it",
-  "Building a SaaS procurement process from scratch",
-  "API integrations: the hidden differentiator in SaaS selection",
-  "SaaS compliance and data residency: what buyers need to know",
-  "The case for consolidating your SaaS stack",
-  "How to measure ROI on your SaaS investments",
-  "Project management tools compared: what the data actually shows",
-];
-
+/**
+ * POST /api/cron/generate-from-research
+ *
+ * Step 2 of the two-step blog pipeline.
+ * Picks the oldest pending Research document, uses its keywords and search
+ * data to generate a high-quality blog draft with images.
+ *
+ * Authentication: Bearer token via CRON_SECRET env var.
+ * Schedule: Once daily, a few hours after auto-research (e.g., 9 AM).
+ */
 export async function POST(request: NextRequest) {
   const auth = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
@@ -44,34 +31,29 @@ export async function POST(request: NextRequest) {
   try {
     await dbConnect();
     const settings = await getGlobalSettings();
-
-    // Resolve topic pool
     const year = new Date().getFullYear();
-    const topicPool =
-      settings.topic_pool.length > 0 ? settings.topic_pool : DEFAULT_TOPIC_POOL;
-    const topic = topicPool[Math.floor(Math.random() * topicPool.length)].replace(
-      "{year}",
-      String(year)
-    );
 
-    // Deep research for richer content context
-    let searchContext = "";
-    if (settings.search_enabled) {
-      try {
-        const research = await deepResearch(topic);
-        searchContext = formatDeepResearchForPrompt(research);
-      } catch (searchErr) {
-        console.error("[Cron] Deep research failed, trying basic search:", searchErr);
-        try {
-          const basic = await discoverTrendingSaaS();
-          searchContext = formatSearchResultsForPrompt(basic);
-        } catch {
-          console.error("[Cron] Basic search also failed, continuing without research");
-        }
-      }
+    // Step 1: Find the oldest pending research
+    const research = await Research.findOne({ status: "pending" })
+      .sort({ created_at: 1 })
+      .lean();
+
+    if (!research) {
+      return NextResponse.json(
+        { message: "No pending research found. Run auto-research first." },
+        { status: 200 }
+      );
     }
 
-    // Resolve prompts
+    console.log(`[GenerateFromResearch] Using research: "${research.topic}" (${research._id})`);
+    console.log(`[GenerateFromResearch] Keywords: ${research.keywords.join(", ")}`);
+
+    // Step 2: Build the topic with angle for richer content
+    const topic = research.suggested_angle
+      ? `${research.topic}: ${research.suggested_angle}`
+      : research.topic;
+
+    // Step 3: Resolve prompts
     const overrides = await getPromptOverrides("blog");
     let systemPrompt: string;
     let userPrompt: string;
@@ -88,17 +70,21 @@ export async function POST(request: NextRequest) {
       userPrompt = interpolateTemplate(overrides.userPromptTemplate, {
         topic,
         year: String(year),
-        searchResults: searchContext,
+        searchResults: research.search_data,
       });
     } else {
       userPrompt = blogPrompts.buildUserPrompt({
         topic,
+        category: research.suggested_category || undefined,
+        keywords: research.keywords,
         year: String(year),
-        searchResults: searchContext || undefined,
+        searchResults: research.search_data || undefined,
         author,
       });
     }
 
+    // Step 4: Generate blog post
+    console.log("[GenerateFromResearch] Generating blog post...");
     const openai = getOpenAI();
     const completion = await openai.chat.completions.create({
       model: settings.model,
@@ -118,12 +104,12 @@ export async function POST(request: NextRequest) {
 
     const blogData = parseAIResponse<Record<string, unknown>>(rawContent);
 
-    // Sanitize: AI sometimes returns {} instead of "" for image fields
+    // Sanitize image fields
     if (blogData.featured_image && typeof blogData.featured_image !== "string") {
       blogData.featured_image = "";
     }
 
-    // Generate featured image
+    // Step 5: Generate images (featured + inline)
     if (settings.auto_generate_images) {
       try {
         const title = blogData.title as string;
@@ -143,7 +129,7 @@ export async function POST(request: NextRequest) {
         });
         blogData.featured_image = imageUrl;
 
-        // Add a second inline image inside the post body.
+        // Generate inline image
         if (typeof blogData.content === "string" && blogData.content.trim()) {
           const inlineImageUrl = await generateImage({
             title: `${title} (inline)`,
@@ -166,7 +152,7 @@ export async function POST(request: NextRequest) {
           );
         }
       } catch (imgErr) {
-        console.error("[Cron] Image generation failed, saving draft without image:", imgErr);
+        console.error("[GenerateFromResearch] Image generation failed:", imgErr);
       }
     }
 
@@ -181,13 +167,16 @@ export async function POST(request: NextRequest) {
       if (toc.length > 0) blogData.toc = toc;
     }
 
-    // Auto-calculate read_time from content word count
+    // Auto-calculate read_time
     if (blogData.content) {
-      const words = (blogData.content as string).replace(/<[^>]+>/g, " ").split(/\s+/).filter(Boolean).length;
+      const words = (blogData.content as string)
+        .replace(/<[^>]+>/g, " ")
+        .split(/\s+/)
+        .filter(Boolean).length;
       blogData.read_time = Math.max(1, Math.ceil(words / 230));
     }
 
-    // Save as DRAFT — requires manual review before publishing
+    // Save as DRAFT for manual review
     blogData.status = "draft";
 
     // Ensure slug uniqueness
@@ -198,7 +187,11 @@ export async function POST(request: NextRequest) {
 
     const post = await BlogPost.create(blogData);
 
-    console.log(`[Cron] Draft saved: "${post.title}" (${post.slug})`);
+    // Step 6: Mark research as used
+    await Research.findByIdAndUpdate(research._id, { status: "used" });
+
+    console.log(`[GenerateFromResearch] Draft saved: "${post.title}" (${post.slug})`);
+    console.log(`[GenerateFromResearch] Research ${research._id} marked as used`);
 
     return NextResponse.json({
       success: true,
@@ -206,10 +199,12 @@ export async function POST(request: NextRequest) {
       title: post.title,
       slug: post.slug,
       status: "draft",
+      researchId: research._id,
+      keywords: research.keywords,
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Cron generation failed";
-    console.error("[Cron]", message);
+    const message = err instanceof Error ? err.message : "Generate from research failed";
+    console.error("[GenerateFromResearch]", message);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

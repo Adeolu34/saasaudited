@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Tool from "@/lib/models/Tool";
+import { submitUrlToIndexNow } from "@/lib/indexnow";
+
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://saasaudited.com";
 
 export async function GET(request: NextRequest) {
   await dbConnect();
@@ -29,6 +32,12 @@ export async function POST(request: NextRequest) {
     await dbConnect();
     const body = await request.json();
     const tool = await Tool.create(body);
+
+    // Notify search engines about new tool page
+    if (tool.slug) {
+      submitUrlToIndexNow(`${BASE_URL}/reviews/${tool.slug}`).catch(() => {});
+    }
+
     return NextResponse.json({ tool }, { status: 201 });
   } catch (err: unknown) {
     const message =
