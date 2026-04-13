@@ -18,8 +18,11 @@ interface Props {
 
 export async function generateStaticParams() {
   await dbConnect();
-  const comparisons = await Comparison.find({}, { slug: 1 }).lean();
-  return comparisons.map((c) => ({ slug: c.slug }));
+  const comparisons = await Comparison.find(
+    { slug: { $exists: true, $ne: "" } },
+    { slug: 1 }
+  ).lean();
+  return comparisons.map((c) => ({ slug: c.slug as string }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

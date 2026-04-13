@@ -21,8 +21,11 @@ interface Props {
 
 export async function generateStaticParams() {
   await dbConnect();
-  const reviews = await Review.find({}, { slug: 1 }).lean();
-  return reviews.map((r) => ({ slug: r.slug }));
+  const reviews = await Review.find(
+    { slug: { $exists: true, $ne: "" } },
+    { slug: 1 }
+  ).lean();
+  return reviews.map((r) => ({ slug: r.slug as string }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

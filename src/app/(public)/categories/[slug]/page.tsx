@@ -21,8 +21,11 @@ interface Props {
 
 export async function generateStaticParams() {
   await dbConnect();
-  const categories = await Category.find({}, { slug: 1 }).lean();
-  return categories.map((c) => ({ slug: c.slug }));
+  const categories = await Category.find(
+    { slug: { $exists: true, $ne: "" } },
+    { slug: 1 }
+  ).lean();
+  return categories.map((c) => ({ slug: c.slug as string }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
