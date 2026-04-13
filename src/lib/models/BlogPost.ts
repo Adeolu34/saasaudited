@@ -1,12 +1,12 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IBlogPost extends Document {
-  slug: string;
-  title: string;
-  category: string;
-  author: { name: string; image?: string; bio?: string };
-  excerpt: string;
-  content: string;
+  slug?: string;
+  title?: string;
+  category?: string;
+  author?: { name?: string; image?: string; bio?: string };
+  excerpt?: string;
+  content?: string;
   featured_image?: string;
   tags: string[];
   toc: { title: string; anchor: string }[];
@@ -16,24 +16,28 @@ export interface IBlogPost extends Document {
   published_at: Date;
 }
 
+function requiredForPublished(this: IBlogPost) {
+  return this.status === "published";
+}
+
 const BlogPostSchema = new Schema<IBlogPost>(
   {
-    slug: { type: String, required: true, unique: true },
-    title: { type: String, required: true },
-    category: { type: String, required: true },
+    slug: { type: String, required: requiredForPublished, unique: true, sparse: true },
+    title: { type: String, required: requiredForPublished },
+    category: { type: String, required: requiredForPublished },
     author: {
-      name: { type: String, required: true },
+      name: { type: String, required: requiredForPublished },
       image: String,
       bio: String,
     },
-    excerpt: { type: String, required: true },
-    content: { type: String, required: true },
+    excerpt: { type: String, required: requiredForPublished },
+    content: { type: String, required: requiredForPublished },
     featured_image: String,
     tags: [String],
     toc: [{ title: String, anchor: String }],
     read_time: { type: Number, default: 5 },
     is_featured: { type: Boolean, default: false },
-    status: { type: String, enum: ["draft", "published"], default: "published" },
+    status: { type: String, enum: ["draft", "published"], default: "draft" },
     published_at: { type: Date, default: Date.now },
   },
   { timestamps: true }
