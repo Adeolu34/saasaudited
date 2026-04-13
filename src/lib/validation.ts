@@ -35,28 +35,29 @@ export function clampPage(raw: string | null): number {
 // -- Field whitelists per model --
 
 export const BLOG_POST_FIELDS = [
-  "title", "category", "author", "excerpt", "content",
+  "title", "slug", "category", "author", "excerpt", "content",
   "featured_image", "tags", "toc", "status", "is_featured",
+  "read_time", "published_at",
 ] as const;
 
 export const REVIEW_FIELDS = [
-  "title", "tool_slug", "pros", "cons", "verdict",
+  "title", "slug", "tool_slug", "pros", "cons", "verdict",
   "body_content", "screenshots",
 ] as const;
 
 export const TOOL_FIELDS = [
-  "name", "category", "logo_url", "official_url", "overall_score",
+  "name", "slug", "category", "logo_url", "official_url", "overall_score",
   "rating_label", "short_description", "is_featured", "is_editors_pick",
   "pricing_tiers", "metrics",
 ] as const;
 
 export const COMPARISON_FIELDS = [
-  "title", "tool_a_slug", "tool_b_slug", "tldr", "features",
+  "title", "slug", "tool_a_slug", "tool_b_slug", "tldr", "features",
   "winner", "decision_criteria", "body_content",
 ] as const;
 
 export const CATEGORY_FIELDS = [
-  "name", "description", "icon_name", "faq",
+  "name", "slug", "description", "icon_name", "faq", "featured_tools",
 ] as const;
 
 export const AUTHOR_FIELDS = [
