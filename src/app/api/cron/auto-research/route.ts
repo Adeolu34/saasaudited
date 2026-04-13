@@ -6,6 +6,9 @@ import { parseAIResponse } from "@/lib/ai/parsers";
 import { getGlobalSettings } from "@/lib/ai/settings";
 import { discoverTrendingSaaS, deepResearch, formatDeepResearchForPrompt } from "@/lib/ai/search";
 
+// Allow up to 5 minutes for search + AI topic selection
+export const maxDuration = 300;
+
 /**
  * POST /api/cron/auto-research
  *

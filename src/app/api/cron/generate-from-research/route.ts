@@ -10,6 +10,9 @@ import * as blogPrompts from "@/lib/ai/prompts/blog-post";
 import { getAuthorForType } from "@/lib/ai/authors";
 import { buildBlogImageContext, insertInlineImageIntoBlogContent } from "@/lib/ai/blog-images";
 
+// Allow up to 5 minutes for AI text + image generation
+export const maxDuration = 300;
+
 /**
  * POST /api/cron/generate-from-research
  *
@@ -109,45 +112,36 @@ export async function POST(request: NextRequest) {
       blogData.featured_image = "";
     }
 
-    // Step 5: Generate images (featured + inline)
+    // Step 5: Generate images (featured + inline) in parallel
     if (settings.auto_generate_images) {
       try {
         const title = blogData.title as string;
-        const imageUrl = await generateImage({
+        const imageContext = buildBlogImageContext({
           title,
-          contentType: "blog",
-          variant: "featured",
-          context: buildBlogImageContext({
-            title,
-            category: typeof blogData.category === "string" ? blogData.category : undefined,
-            excerpt: typeof blogData.excerpt === "string" ? blogData.excerpt : undefined,
-            content: typeof blogData.content === "string" ? blogData.content : undefined,
-            tags: Array.isArray(blogData.tags)
-              ? blogData.tags.filter((tag): tag is string => typeof tag === "string").slice(0, 6)
-              : undefined,
-          }),
+          category: typeof blogData.category === "string" ? blogData.category : undefined,
+          excerpt: typeof blogData.excerpt === "string" ? blogData.excerpt : undefined,
+          content: typeof blogData.content === "string" ? blogData.content : undefined,
+          tags: Array.isArray(blogData.tags)
+            ? blogData.tags.filter((tag): tag is string => typeof tag === "string").slice(0, 6)
+            : undefined,
         });
-        blogData.featured_image = imageUrl;
 
-        // Generate inline image
-        if (typeof blogData.content === "string" && blogData.content.trim()) {
-          const inlineImageUrl = await generateImage({
-            title: `${title} (inline)`,
-            contentType: "blog",
-            variant: "inline",
-            context: buildBlogImageContext({
-              title,
-              category: typeof blogData.category === "string" ? blogData.category : undefined,
-              excerpt: typeof blogData.excerpt === "string" ? blogData.excerpt : undefined,
-              content: blogData.content,
-              tags: Array.isArray(blogData.tags)
-                ? blogData.tags.filter((tag): tag is string => typeof tag === "string").slice(0, 6)
-                : undefined,
-            }),
-          });
+        const hasContent = typeof blogData.content === "string" && blogData.content.trim();
+
+        // Run both image generations in parallel to cut time in half
+        const [featuredUrl, inlineUrl] = await Promise.all([
+          generateImage({ title, contentType: "blog", variant: "featured", context: imageContext }),
+          hasContent
+            ? generateImage({ title: `${title} (inline)`, contentType: "blog", variant: "inline", context: imageContext })
+            : Promise.resolve(null),
+        ]);
+
+        blogData.featured_image = featuredUrl;
+
+        if (inlineUrl && typeof blogData.content === "string") {
           blogData.content = insertInlineImageIntoBlogContent(
             blogData.content,
-            inlineImageUrl,
+            inlineUrl,
             `Illustration for ${title}`
           );
         }
