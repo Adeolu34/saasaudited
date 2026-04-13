@@ -2,21 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import dbConnect from "@/lib/mongodb";
 import ApiKey from "@/lib/models/ApiKey";
-import { verifySession } from "@/lib/auth/session";
+import { requireApiRole } from "@/lib/auth/api-auth";
 
 export async function GET() {
+  const { error } = await requireApiRole("admin");
+  if (error) return error;
+
   await dbConnect();
   const keys = await ApiKey.find().sort({ createdAt: -1 }).lean();
   return NextResponse.json({ keys });
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const session = await verifySession();
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const { session, error } = await requireApiRole("admin");
+  if (error) return error;
 
+  try {
     await dbConnect();
     const body = await request.json();
     const { name, scopes, rate_limit, expires_at } = body;

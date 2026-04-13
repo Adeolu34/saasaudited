@@ -1,13 +1,20 @@
 import { NextResponse } from "next/server";
 import { getAuthors, saveAuthorImage } from "@/lib/ai/authors";
 import { generateImage } from "@/lib/ai/image";
+import { requireApiRole } from "@/lib/auth/api-auth";
 
 export async function GET() {
+  const { error } = await requireApiRole("editor");
+  if (error) return error;
+
   const authors = await getAuthors();
   return NextResponse.json({ authors });
 }
 
 export async function POST() {
+  const { error: authError } = await requireApiRole("editor");
+  if (authError) return authError;
+
   try {
     const authors = await getAuthors();
     const results: { name: string; status: string; image?: string; error?: string }[] = [];

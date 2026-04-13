@@ -3,10 +3,14 @@ import dbConnect from "@/lib/mongodb";
 import BlogPost from "@/lib/models/BlogPost";
 import { generateImage } from "@/lib/ai/image";
 import { buildBlogImageContext, insertInlineImageIntoBlogContent } from "@/lib/ai/blog-images";
+import { requireApiRole } from "@/lib/auth/api-auth";
 
 export const maxDuration = 300; // Allow up to 5 minutes for bulk generation
 
 export async function POST() {
+  const { error: authError } = await requireApiRole("editor");
+  if (authError) return authError;
+
   try {
     await dbConnect();
 

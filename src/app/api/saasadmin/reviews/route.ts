@@ -2,13 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Review from "@/lib/models/Review";
 import { submitUrlToIndexNow } from "@/lib/indexnow";
+import { requireApiRole } from "@/lib/auth/api-auth";
+import { pickFields, clampPage, REVIEW_FIELDS } from "@/lib/validation";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://saasaudited.com";
 
 export async function GET(request: NextRequest) {
+  const { error } = await requireApiRole("editor");
+  if (error) return error;
+
   await dbConnect();
   const q = request.nextUrl.searchParams.get("q") || "";
-  const page = parseInt(request.nextUrl.searchParams.get("page") || "1");
+  const page = clampPage(request.nextUrl.searchParams.get("page"));
   const limit = 20;
   const safeQ = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const filter = safeQ ? { title: { $regex: safeQ, $options: "i" } } : {};
@@ -20,9 +25,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const { error } = await requireApiRole("editor");
+  if (error) return error;
+
   try {
     await dbConnect();
-    const body = await request.json();
+    const body = pickFields(await request.json(), REVIEW_FIELDS);
     const review = await Review.create(body);
 
     // Notify search engines about new review page

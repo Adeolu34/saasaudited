@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifyCronAuth } from "@/lib/auth/cron-auth";
 import dbConnect from "@/lib/mongodb";
 import Research from "@/lib/models/Research";
 import { getOpenAI } from "@/lib/ai/openai";
@@ -107,12 +108,8 @@ The primary keyword (first in the array) should be the term with the highest sea
  * Schedule: Once daily (e.g., 6 AM).
  */
 export async function POST(request: NextRequest) {
-  const auth = request.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret || auth !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const authError = verifyCronAuth(request.headers.get("authorization"));
+  if (authError) return authError;
 
   // Fire-and-forget: run the entire pipeline in the background
   runResearchPipeline().catch((err) =>

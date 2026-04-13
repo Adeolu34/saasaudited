@@ -2,10 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import AiSettings from "@/lib/models/AiSettings";
 import { clearSettingsCache } from "@/lib/ai/settings";
+import { requireApiRole } from "@/lib/auth/api-auth";
 
 const VALID_KEYS = new Set(["global", "blog", "tool", "review", "comparison", "category"]);
 
 export async function GET() {
+  const { error } = await requireApiRole("admin");
+  if (error) return error;
+
   try {
     await dbConnect();
     const settings = await AiSettings.find().lean();
@@ -17,6 +21,9 @@ export async function GET() {
 }
 
 export async function PUT(request: NextRequest) {
+  const { error } = await requireApiRole("admin");
+  if (error) return error;
+
   try {
     const body = await request.json();
     const { config_key, ...fields } = body;

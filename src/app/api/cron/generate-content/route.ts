@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifyCronAuth } from "@/lib/auth/cron-auth";
 import dbConnect from "@/lib/mongodb";
 import BlogPost from "@/lib/models/BlogPost";
 import { getOpenAI } from "@/lib/ai/openai";
@@ -34,12 +35,8 @@ const DEFAULT_TOPIC_POOL = [
 ];
 
 export async function POST(request: NextRequest) {
-  const auth = request.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret || auth !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const authError = verifyCronAuth(request.headers.get("authorization"));
+  if (authError) return authError;
 
   try {
     await dbConnect();

@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchSaaS } from "@/lib/ai/search";
 import { checkRateLimit } from "@/lib/ai/rate-limiter";
+import { requireApiRole } from "@/lib/auth/api-auth";
 
 export async function POST(request: NextRequest) {
+  const { error: authError } = await requireApiRole("editor");
+  if (authError) return authError;
+
   try {
     if (!checkRateLimit("ai-research")) {
       return NextResponse.json(

@@ -4,6 +4,7 @@ import BlogPost from "@/lib/models/BlogPost";
 import { generateImage } from "@/lib/ai/image";
 import { buildBlogImageContext, insertInlineImageIntoBlogContent } from "@/lib/ai/blog-images";
 import { checkRateLimit } from "@/lib/ai/rate-limiter";
+import { requireApiRole } from "@/lib/auth/api-auth";
 
 /**
  * POST /api/saasadmin/ai/image/inline
@@ -14,6 +15,9 @@ import { checkRateLimit } from "@/lib/ai/rate-limiter";
  * If the post already has an inline image, it will be skipped unless force=true.
  */
 export async function POST(request: NextRequest) {
+  const { error: authError } = await requireApiRole("editor");
+  if (authError) return authError;
+
   try {
     if (!checkRateLimit("ai-image-inline")) {
       return NextResponse.json(

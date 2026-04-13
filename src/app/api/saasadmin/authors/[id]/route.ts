@@ -2,11 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Author from "@/lib/models/Author";
 import BlogPost from "@/lib/models/BlogPost";
+import { requireApiRole } from "@/lib/auth/api-auth";
+import { pickFields, AUTHOR_FIELDS } from "@/lib/validation";
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { error } = await requireApiRole("editor");
+  if (error) return error;
+
   await dbConnect();
   const { id } = await params;
   const author = await Author.findById(id).lean();
@@ -18,10 +23,13 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { error } = await requireApiRole("editor");
+  if (error) return error;
+
   try {
     await dbConnect();
     const { id } = await params;
-    const body = await request.json();
+    const body = pickFields(await request.json(), AUTHOR_FIELDS);
 
     // Get the old author name before updating (for propagation)
     const oldAuthor = await Author.findById(id).lean();
@@ -64,6 +72,9 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { error } = await requireApiRole("admin");
+  if (error) return error;
+
   await dbConnect();
   const { id } = await params;
   const result = await Author.findByIdAndDelete(id);

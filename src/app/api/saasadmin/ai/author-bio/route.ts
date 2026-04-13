@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { getOpenAI } from "@/lib/ai/openai";
 import { getGlobalSettings } from "@/lib/ai/settings";
 import { checkRateLimit } from "@/lib/ai/rate-limiter";
+import { requireApiRole } from "@/lib/auth/api-auth";
 
 export async function POST(request: NextRequest) {
+  const { error: authError } = await requireApiRole("editor");
+  if (authError) return authError;
+
   try {
     if (!checkRateLimit("ai-author-bio")) {
       return NextResponse.json(

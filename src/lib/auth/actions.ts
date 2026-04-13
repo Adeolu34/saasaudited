@@ -6,6 +6,9 @@ import AdminUser from "@/lib/models/AdminUser";
 import { createSession, deleteSession } from "./session";
 import { redirect } from "next/navigation";
 
+// Pre-computed dummy hash so bcrypt.compare always runs (prevents timing attacks)
+const DUMMY_HASH = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
+
 export async function loginAction(
   _prevState: { error?: string } | null,
   formData: FormData
@@ -20,12 +23,13 @@ export async function loginAction(
   await dbConnect();
   const user = await AdminUser.findOne({ email, is_active: true });
 
-  if (!user) {
-    return { error: "Invalid email or password." };
-  }
+  // Always run bcrypt.compare to prevent timing-based user enumeration
+  const valid = await bcrypt.compare(
+    password,
+    user?.password_hash || DUMMY_HASH
+  );
 
-  const valid = await bcrypt.compare(password, user.password_hash);
-  if (!valid) {
+  if (!user || !valid) {
     return { error: "Invalid email or password." };
   }
 

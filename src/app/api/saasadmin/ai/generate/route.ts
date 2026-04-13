@@ -13,6 +13,7 @@ import * as blogPrompts from "@/lib/ai/prompts/blog-post";
 import * as comparisonPrompts from "@/lib/ai/prompts/comparison";
 import * as categoryPrompts from "@/lib/ai/prompts/category";
 import { getAuthorForType } from "@/lib/ai/authors";
+import { requireApiRole } from "@/lib/auth/api-auth";
 
 const promptMap = {
   tool: toolPrompts,
@@ -27,6 +28,9 @@ type ContentType = keyof typeof promptMap;
 const IMAGE_TYPES = new Set(["blog", "tool"]);
 
 export async function POST(request: NextRequest) {
+  const { error: authError } = await requireApiRole("editor");
+  if (authError) return authError;
+
   try {
     if (!checkRateLimit("ai-generate")) {
       return NextResponse.json(

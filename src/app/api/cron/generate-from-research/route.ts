@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifyCronAuth } from "@/lib/auth/cron-auth";
 import dbConnect from "@/lib/mongodb";
 import Research from "@/lib/models/Research";
 import BlogPost from "@/lib/models/BlogPost";
@@ -186,12 +187,8 @@ async function runPipeline() {
  * Schedule: Once daily, a few hours after auto-research (e.g., 9 AM).
  */
 export async function POST(request: NextRequest) {
-  const auth = request.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret || auth !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const authError = verifyCronAuth(request.headers.get("authorization"));
+  if (authError) return authError;
 
   // Quick check: is there pending research?
   await dbConnect();

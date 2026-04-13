@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import AuditLog from "@/lib/models/AuditLog";
+import { requireApiRole } from "@/lib/auth/api-auth";
 
 export async function GET() {
+  const { error } = await requireApiRole("editor");
+  if (error) return error;
+
   await dbConnect();
 
   const thirtyDaysAgo = new Date();

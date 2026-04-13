@@ -11,8 +11,18 @@ export function sanitizeHtml(dirty: string): string {
       ...sanitizeHtmlLib.defaults.allowedAttributes,
       img: ["src", "alt", "width", "height", "loading"],
       a: ["href", "name", "target", "rel"],
-      "*": ["class", "id"],
+      h2: ["id"],
+      h3: ["id"],
+      figure: ["class"],
+      code: ["class"],
+      pre: ["class"],
     },
+    allowedClasses: {
+      figure: ["post-inline-image"],
+      code: [/^language-/],
+      pre: [/^language-/],
+    },
+    allowedSchemes: ["http", "https", "mailto"],
   });
 }
 
