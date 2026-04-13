@@ -12,4 +12,4 @@ export function getReplicate(): Replicate {
 }
 
 export const DEFAULT_IMAGE_MODEL =
-  process.env.REPLICATE_IMAGE_MODEL || "black-forest-labs/flux-1.1-pro";
+  process.env.REPLICATE_IMAGE_MODEL || "google/nano-banana-pro";

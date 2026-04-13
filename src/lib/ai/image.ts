@@ -37,6 +37,38 @@ function buildVisualSubject(title: string, context?: string): string {
 }
 
 /**
+ * Build a short, punchy headline (3-6 words) for text overlay on the image.
+ * Nano Banana Pro renders text accurately, so we use this for click-grabbing headlines.
+ */
+function buildImageHeadline(title: string): string {
+  // Strip year, parentheticals, and common filler
+  let headline = title
+    .replace(/\(inline\)$/i, "")
+    .replace(/\b20\d{2}\b/g, "")
+    .replace(/\s*[:\-–—|]\s*/g, " — ")
+    .trim();
+
+  // If title has a separator, take the punchier half
+  const separatorMatch = headline.match(/^(.+?)\s*—\s*(.+)$/);
+  if (separatorMatch) {
+    const [, left, right] = separatorMatch;
+    // Pick the shorter, punchier side (but at least 2 words)
+    headline =
+      left.split(/\s+/).length <= 5 && left.split(/\s+/).length >= 2
+        ? left.trim()
+        : right.trim();
+  }
+
+  // Truncate to ~6 words max for visual impact
+  const words = headline.split(/\s+/);
+  if (words.length > 6) {
+    headline = words.slice(0, 6).join(" ");
+  }
+
+  return headline.toUpperCase();
+}
+
+/**
  * Category-aware style modifiers to make images feel distinct per topic.
  */
 function getCategoryStyle(context?: string): string {
@@ -60,18 +92,67 @@ function getCategoryStyle(context?: string): string {
   return categoryStyles[cat] || "";
 }
 
+/**
+ * Build a professional chart/infographic prompt for inline blog images.
+ * Picks chart type based on category and extracts contextual labels from the blog.
+ */
+function buildChartPrompt(title: string, context?: string): string {
+  const cat = (context?.match(/Category:\s*([^|]+)/i)?.[1] || "").trim().toLowerCase();
+  const tags = (context?.match(/Tags:\s*([^|]+)/i)?.[1] || "").trim();
+  const cleanTitle = title
+    .replace(/\(inline\)$/i, "")
+    .replace(/\b20\d{2}\b/g, "")
+    .replace(/[:,\-–—|]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  // Extract up to 5 plausible data labels from tags or title keywords
+  const labelCandidates = tags
+    ? tags.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 5)
+    : cleanTitle.split(/\s+/).filter((w) => w.length > 3).slice(0, 4);
+  const labels = labelCandidates.length >= 2
+    ? labelCandidates.join(", ")
+    : "Growth, Revenue, Adoption, Retention, Satisfaction";
+
+  // Map category to the most appropriate chart style
+  const chartStyles: Record<string, string> = {
+    strategy: `A sleek upward-trending line chart showing growth over quarterly periods. Data labels include: ${labels}. The trend line is bold teal with a subtle gradient fill beneath. Chart title at top: "${cleanTitle}".`,
+    reviews: `A clean horizontal bar chart comparing ratings or scores. Categories on the left axis: ${labels}. Bars in a gradient from deep blue to vibrant teal. Each bar has a score label at the end. Chart title at top: "${cleanTitle}".`,
+    comparisons: `A professional grouped bar chart comparing two or three options side by side. Comparison categories: ${labels}. Each group uses distinct colors (teal, coral, slate). Chart title at top: "${cleanTitle}".`,
+    guides: `A clean step-by-step flow diagram or funnel chart showing a process. Steps labeled: ${labels}. Each step is a rounded rectangle connected by arrows, using a teal-to-blue gradient. Chart title at top: "${cleanTitle}".`,
+    "industry news": `A professional donut chart or pie chart showing market share breakdown. Segments labeled: ${labels}. Bold, distinct colors for each segment with percentage labels. Chart title at top: "${cleanTitle}".`,
+  };
+
+  const chartDescription = chartStyles[cat]
+    || `A professional bar chart with data categories: ${labels}. Clean bars in teal and slate tones with value labels. Chart title at top: "${cleanTitle}".`;
+
+  return `Professional data visualization chart on a clean white background. ${chartDescription} Minimalist design inspired by McKinsey and Harvard Business Review reports. Crisp sans-serif typography (Inter or Helvetica style). Subtle gridlines, no chartjunk. Light gray axes. The chart looks like a real, publication-ready infographic. High resolution, sharp text, perfectly aligned elements.`;
+}
+
 export async function generateImage(params: ImageGenerationParams): Promise<string> {
   const replicate = getReplicate();
 
   const visualSubject = buildVisualSubject(params.title, params.context);
   const categoryStyle = getCategoryStyle(params.context);
+  const headline = buildImageHeadline(params.title);
+  const isNanoBananaModel = DEFAULT_IMAGE_MODEL.includes("nano-banana");
+
+  // Text overlay instructions — only for Nano Banana Pro which renders text accurately
+  const featuredTextOverlay = isNanoBananaModel
+    ? ` In the lower-left area of the image, display the bold text "${headline}" in large, clean white sans-serif font with a subtle dark shadow for contrast. The text should be prominent and easy to read at any size.`
+    : " No text, no watermarks, no logos, no words, no letters, no UI elements.";
+
+  // Inline: Nano Banana Pro generates a professional data chart; others get a generic illustration
+  const inlinePrompt = isNanoBananaModel
+    ? buildChartPrompt(params.title, params.context)
+    : `Clean conceptual illustration for a technology article. Soft isometric perspective. The visual metaphor represents: ${visualSubject}. Muted professional color palette with one vibrant accent color. Elegant and informational, like a premium infographic header. No text, no watermarks, no logos, no words, no letters.`;
 
   const styleMap = {
     blog: {
-      featured: `High-end editorial photograph for a premium technology publication. ${categoryStyle || "Rich jewel-tone color palette with deep blues, teals, and warm amber accents."} Cinematic lighting with dramatic depth. The scene visually represents: ${visualSubject}. Photorealistic, ultra-sharp, shot on medium format camera. No text, no watermarks, no logos, no words, no letters, no UI elements.`,
-      inline: `Clean conceptual illustration for a technology article. Soft isometric perspective. The visual metaphor represents: ${visualSubject}. Muted professional color palette with one vibrant accent color. Elegant and informational, like a premium infographic header. No text, no watermarks, no logos, no words, no letters.`,
+      featured: `High-end editorial photograph for a premium technology publication. ${categoryStyle || "Rich jewel-tone color palette with deep blues, teals, and warm amber accents."} Cinematic lighting with dramatic depth. The scene visually represents: ${visualSubject}. Photorealistic, ultra-sharp, shot on medium format camera.${featuredTextOverlay}`,
+      inline: inlinePrompt,
     },
-    tool: `Minimal product visualization of a modern SaaS application interface. Clean white background, subtle shadows, floating UI elements with soft gradients. Professional product photography style. Sharp, high contrast, premium feel. No text, no watermarks, no logos, no words, no letters.`,
+    tool: `Minimal product visualization of a modern SaaS application interface. Clean white background, subtle shadows, floating UI elements with soft gradients. Professional product photography style. Sharp, high contrast, premium feel. No text, no watermarks, no logos.`,
     author: `Professional corporate headshot portrait. Clean studio background with subtle gradient. Sharp focus on face, confident and approachable expression, business attire. Natural skin tones, soft studio lighting. Photorealistic, high detail. No text, no watermarks.`,
   };
 
@@ -95,34 +176,47 @@ export async function generateImage(params: ImageGenerationParams): Promise<stri
   const aspect =
     aspectMap[params.contentType]?.[params.variant || "featured"] || "16:9";
 
-  // FLUX models use a different input shape than SDXL
+  // Build model-specific input parameters
   const isFlux = DEFAULT_IMAGE_MODEL.includes("flux");
+  const isNanoBanana = DEFAULT_IMAGE_MODEL.includes("nano-banana");
 
-  const input = isFlux
-    ? {
-        prompt,
-        aspect_ratio: aspect,
-        output_format: "webp",
-        output_quality: 90,
-        safety_tolerance: 2,
-        prompt_upsampling: true,
-      }
-    : {
-        // Fallback for SDXL-style models
-        prompt,
-        negative_prompt:
-          "text, watermark, signature, blurry, low quality, distorted, ugly, nsfw, letters, words, writing, typography, font, label, caption, logo, noisy background, low contrast, jpeg artifacts",
-        width: params.contentType === "blog" ? 1200 : 512,
-        height:
-          params.contentType === "blog"
-            ? params.variant === "inline"
-              ? 675
-              : 632
-            : 512,
-        num_outputs: 1,
-        guidance_scale: 7,
-        num_inference_steps: 35,
-      };
+  let input: Record<string, unknown>;
+
+  if (isNanoBanana) {
+    input = {
+      prompt,
+      aspect_ratio: aspect,
+      output_format: "webp",
+      num_images: 1,
+      safety_tolerance: 2,
+    };
+  } else if (isFlux) {
+    input = {
+      prompt,
+      aspect_ratio: aspect,
+      output_format: "webp",
+      output_quality: 90,
+      safety_tolerance: 2,
+      prompt_upsampling: true,
+    };
+  } else {
+    // Fallback for SDXL-style models
+    input = {
+      prompt,
+      negative_prompt:
+        "text, watermark, signature, blurry, low quality, distorted, ugly, nsfw, letters, words, writing, typography, font, label, caption, logo, noisy background, low contrast, jpeg artifacts",
+      width: params.contentType === "blog" ? 1200 : 512,
+      height:
+        params.contentType === "blog"
+          ? params.variant === "inline"
+            ? 675
+            : 632
+          : 512,
+      num_outputs: 1,
+      guidance_scale: 7,
+      num_inference_steps: 35,
+    };
+  }
 
   const output = await replicate.run(
     DEFAULT_IMAGE_MODEL as `${string}/${string}` | `${string}/${string}:${string}`,
