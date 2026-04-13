@@ -6,6 +6,7 @@ import BlogPostCard from "@/components/blog/BlogPostCard";
 import Pagination from "@/components/shared/Pagination";
 import ScrollReveal from "@/components/shared/ScrollReveal";
 import Link from "next/link";
+import Image from "next/image";
 import NewsletterForm from "@/components/shared/NewsletterForm";
 
 export const metadata: Metadata = {
@@ -112,10 +113,12 @@ export default async function BlogIndex({ searchParams }: Props) {
               </p>
               <div className="flex items-center gap-3">
                 {featured.author?.image && (
-                  <img
+                  <Image
                     src={featured.author.image}
                     alt={featured.author.name}
-                    className="w-10 h-10 rounded-full object-cover"
+                    width={40}
+                    height={40}
+                    className="rounded-full object-cover"
                   />
                 )}
                 <div>
@@ -130,10 +133,12 @@ export default async function BlogIndex({ searchParams }: Props) {
             </div>
             <div className="w-full md:w-[40%] relative overflow-hidden bg-surface-container-low min-h-[300px] flex items-center justify-center">
               {featured.featured_image ? (
-                <img
+                <Image
                   src={featured.featured_image}
                   alt={featured.title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 40vw"
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
                 />
               ) : (
                 <div className="relative w-full h-full flex items-center justify-center">

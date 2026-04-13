@@ -10,6 +10,7 @@ import VerdictCard from "@/components/review/VerdictCard";
 import ScoreCircle from "@/components/review/ScoreCircle";
 import MetricBar from "@/components/review/MetricBar";
 import Link from "next/link";
+import Image from "next/image";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { getReviewAndTool } from "@/lib/queries";
 import JsonLd from "@/components/shared/JsonLd";

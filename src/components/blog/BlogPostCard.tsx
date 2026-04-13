@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 interface BlogPostCardProps {
   slug: string;
@@ -25,10 +26,12 @@ export default function BlogPostCard({
     <Link href={`/blog/${slug}`} className="group cursor-pointer block">
       {featuredImage ? (
         <div className="aspect-video rounded-xl overflow-hidden mb-6 relative">
-          <img
+          <Image
             src={featuredImage}
             alt={title}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            fill
+            sizes="(max-width: 768px) 100vw, 33vw"
+            className="object-cover transition-transform duration-700 group-hover:scale-105"
           />
           {/* Subtle gradient overlay on hover */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -50,10 +53,12 @@ export default function BlogPostCard({
       </p>
       <div className="flex items-center gap-3 pt-4 border-t border-outline-variant/10 group-hover:border-outline-variant/25 transition-colors">
         {authorImage ? (
-          <img
+          <Image
             src={authorImage}
             alt={authorName}
-            className="w-8 h-8 rounded-full object-cover"
+            width={32}
+            height={32}
+            className="rounded-full object-cover"
           />
         ) : (
           <div className="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-xs font-bold text-on-surface-variant">

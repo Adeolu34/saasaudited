@@ -10,6 +10,7 @@ import ScoreCircle from "@/components/review/ScoreCircle";
 import NewsletterBand from "@/components/shared/NewsletterBand";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { getComparison } from "@/lib/queries";
+import JsonLd from "@/components/shared/JsonLd";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -63,6 +64,22 @@ export default async function ComparisonPage({ params }: Props) {
 
   return (
     <div className="pt-8 pb-24">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "Article",
+          headline: comp.title,
+          description: `${comp.title}: features, pricing, and performance compared side-by-side.`,
+          publisher: {
+            "@type": "Organization",
+            name: "SaasAudited",
+          },
+          about: [
+            { "@type": "SoftwareApplication", name: toolA.name },
+            { "@type": "SoftwareApplication", name: toolB.name },
+          ],
+        }}
+      />
       {/* Breadcrumb */}
       <div className="max-w-7xl mx-auto px-8 mb-12">
         <Breadcrumb

@@ -10,7 +10,8 @@ export async function GET(request: NextRequest) {
   const q = request.nextUrl.searchParams.get("q") || "";
   const page = parseInt(request.nextUrl.searchParams.get("page") || "1");
   const limit = 20;
-  const filter = q ? { name: { $regex: q, $options: "i" } } : {};
+  const safeQ = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const filter = safeQ ? { name: { $regex: safeQ, $options: "i" } } : {};
   const [tools, total] = await Promise.all([
     Tool.find(filter)
       .sort({ createdAt: -1 })
@@ -35,7 +36,9 @@ export async function POST(request: NextRequest) {
 
     // Notify search engines about new tool page
     if (tool.slug) {
-      submitUrlToIndexNow(`${BASE_URL}/reviews/${tool.slug}`).catch(() => {});
+      submitUrlToIndexNow(`${BASE_URL}/reviews/${tool.slug}`).catch((err) =>
+        console.warn("[IndexNow] tool submit failed:", err)
+      );
     }
 
     return NextResponse.json({ tool }, { status: 201 });

@@ -5,12 +5,19 @@ import NewsletterSubscriber from "@/lib/models/NewsletterSubscriber";
 const rateLimit = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT_WINDOW = 60_000; // 1 minute
 const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_MAP_MAX = 10_000;
 
 function isRateLimited(ip: string): boolean {
   const now = Date.now();
   const entry = rateLimit.get(ip);
 
   if (!entry || now > entry.resetAt) {
+    // Prevent unbounded map growth — evict expired entries periodically
+    if (rateLimit.size > RATE_LIMIT_MAP_MAX) {
+      for (const [key, val] of rateLimit) {
+        if (now > val.resetAt) rateLimit.delete(key);
+      }
+    }
     rateLimit.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW });
     return false;
   }

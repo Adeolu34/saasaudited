@@ -6,12 +6,19 @@ interface Bucket {
 const buckets = new Map<string, Bucket>();
 const MAX_TOKENS = 20;
 const REFILL_INTERVAL = 60_000; // 1 minute
+const BUCKETS_MAP_MAX = 1_000;
 
 export function checkRateLimit(key: string): boolean {
   const now = Date.now();
   let bucket = buckets.get(key);
 
   if (!bucket) {
+    // Prevent unbounded map growth
+    if (buckets.size > BUCKETS_MAP_MAX) {
+      for (const [k, b] of buckets) {
+        if (now - b.lastRefill > REFILL_INTERVAL * 2) buckets.delete(k);
+      }
+    }
     bucket = { tokens: MAX_TOKENS, lastRefill: now };
     buckets.set(key, bucket);
   }

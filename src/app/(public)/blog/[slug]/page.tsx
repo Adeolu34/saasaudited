@@ -6,6 +6,7 @@ import dbConnect from "@/lib/mongodb";
 import BlogPost from "@/lib/models/BlogPost";
 import Breadcrumb from "@/components/layout/Breadcrumb";
 import NewsletterForm from "@/components/shared/NewsletterForm";
+import Image from "next/image";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { getBlogPost } from "@/lib/queries";
 import JsonLd from "@/components/shared/JsonLd";
@@ -36,6 +37,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: post.excerpt,
       type: "article",
       url: `/blog/${slug}`,
+      publishedTime: post.published_at,
+      authors: post.author?.name ? [post.author.name] : undefined,
       images: [{ url: ogImage, width: 1200, height: 630 }],
     },
     twitter: {
@@ -116,10 +119,12 @@ export default async function BlogPostPage({ params }: Props) {
             {/* Author & Stats */}
             <div className="flex items-center gap-4 mb-8">
               {post.author?.image && (
-                <img
+                <Image
                   alt={post.author.name}
-                  className="w-10 h-10 rounded-full object-cover"
+                  className="rounded-full object-cover"
                   src={post.author.image}
+                  width={40}
+                  height={40}
                 />
               )}
               <div className="text-left">
@@ -139,10 +144,14 @@ export default async function BlogPostPage({ params }: Props) {
           {/* Featured Image */}
           {post.featured_image && typeof post.featured_image === "string" && (
             <figure className="mb-16 max-w-[860px] self-center">
-              <img
+              <Image
                 alt={post.title}
                 className="w-full h-auto rounded-xl shadow-xl"
                 src={post.featured_image}
+                width={860}
+                height={484}
+                priority
+                sizes="(max-width: 768px) 100vw, 860px"
               />
             </figure>
           )}
@@ -171,10 +180,12 @@ export default async function BlogPostPage({ params }: Props) {
               {post.author?.bio && (
                 <div className="bg-surface-container-low p-8 rounded-2xl flex flex-col md:flex-row gap-8 items-start">
                   {post.author.image && (
-                    <img
+                    <Image
                       alt={post.author.name}
-                      className="w-20 h-20 rounded-full object-cover"
+                      className="rounded-full object-cover"
                       src={post.author.image}
+                      width={80}
+                      height={80}
                     />
                   )}
                   <div>
@@ -253,11 +264,13 @@ export default async function BlogPostPage({ params }: Props) {
                 className="group block"
               >
                 {related.featured_image && (
-                  <div className="overflow-hidden rounded-xl mb-4 bg-surface-container-low aspect-[16/10]">
-                    <img
+                  <div className="overflow-hidden rounded-xl mb-4 bg-surface-container-low aspect-[16/10] relative">
+                    <Image
                       alt={related.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
                       src={related.featured_image}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 33vw"
                     />
                   </div>
                 )}

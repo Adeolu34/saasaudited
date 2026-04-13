@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import BlogPost from "@/lib/models/BlogPost";
 import { submitUrlToIndexNow } from "@/lib/indexnow";
+import { sanitizeBody } from "@/lib/sanitize";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://saasaudited.com";
 
@@ -21,16 +22,6 @@ export async function GET(
   }
 
   return NextResponse.json({ post });
-}
-
-/** Sanitize fields that must be strings — AI sometimes returns {} or [] */
-function sanitizeBody(body: Record<string, unknown>) {
-  for (const key of ["featured_image", "logo_url"]) {
-    if (body[key] && typeof body[key] !== "string") {
-      body[key] = "";
-    }
-  }
-  return body;
 }
 
 export async function PUT(
@@ -53,7 +44,9 @@ export async function PUT(
 
     // Notify search engines when a post is published or updated
     if (post.slug && post.status !== "draft") {
-      submitUrlToIndexNow(`${BASE_URL}/blog/${post.slug}`).catch(() => {});
+      submitUrlToIndexNow(`${BASE_URL}/blog/${post.slug}`).catch((err) =>
+        console.warn("[IndexNow] blog update submit failed:", err)
+      );
     }
 
     return NextResponse.json({ post, published: isPublishing });

@@ -33,7 +33,9 @@ export async function PUT(
 
     // Notify search engines
     if (tool.slug) {
-      submitUrlToIndexNow(`${BASE_URL}/reviews/${tool.slug}`).catch(() => {});
+      submitUrlToIndexNow(`${BASE_URL}/reviews/${tool.slug}`).catch((err) =>
+        console.warn("[IndexNow] tool update submit failed:", err)
+      );
     }
 
     return NextResponse.json({ tool });

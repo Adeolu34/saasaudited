@@ -10,7 +10,8 @@ export async function GET(request: NextRequest) {
   const q = request.nextUrl.searchParams.get("q") || "";
   const page = parseInt(request.nextUrl.searchParams.get("page") || "1");
   const limit = 20;
-  const filter = q ? { title: { $regex: q, $options: "i" } } : {};
+  const safeQ = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const filter = safeQ ? { title: { $regex: safeQ, $options: "i" } } : {};
   const [reviews, total] = await Promise.all([
     Review.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
     Review.countDocuments(filter),
@@ -26,7 +27,9 @@ export async function POST(request: NextRequest) {
 
     // Notify search engines about new review page
     if (review.slug) {
-      submitUrlToIndexNow(`${BASE_URL}/reviews/${review.slug}`).catch(() => {});
+      submitUrlToIndexNow(`${BASE_URL}/reviews/${review.slug}`).catch((err) =>
+        console.warn("[IndexNow] review submit failed:", err)
+      );
     }
 
     return NextResponse.json({ review }, { status: 201 });

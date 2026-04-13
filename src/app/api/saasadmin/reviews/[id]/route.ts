@@ -29,7 +29,9 @@ export async function PUT(
 
     // Notify search engines
     if (review.slug) {
-      submitUrlToIndexNow(`${BASE_URL}/reviews/${review.slug}`).catch(() => {});
+      submitUrlToIndexNow(`${BASE_URL}/reviews/${review.slug}`).catch((err) =>
+        console.warn("[IndexNow] review update submit failed:", err)
+      );
     }
 
     return NextResponse.json({ review });

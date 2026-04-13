@@ -72,21 +72,18 @@ export async function submitUrlsToIndexNow(urls: string[]): Promise<boolean> {
 }
 
 /**
- * Ping Google and Bing to re-crawl the sitemap.
+ * Ping Bing to re-crawl the sitemap.
+ * Note: Google deprecated their sitemap ping endpoint in 2023.
  */
 async function pingSitemap(): Promise<void> {
   const sitemapUrl = `${BASE_URL}/sitemap.xml`;
 
-  const pings = [
-    `https://www.google.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`,
-    `https://www.bing.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`,
-  ];
-
-  for (const pingUrl of pings) {
-    try {
-      await fetch(pingUrl, { method: "GET" });
-    } catch {
-      // Sitemap pings are best-effort, don't fail the operation
-    }
+  try {
+    await fetch(
+      `https://www.bing.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`,
+      { method: "GET" }
+    );
+  } catch {
+    // Sitemap ping is best-effort, don't fail the operation
   }
 }

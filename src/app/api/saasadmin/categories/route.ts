@@ -5,7 +5,8 @@ import Category from "@/lib/models/Category";
 export async function GET(request: NextRequest) {
   await dbConnect();
   const q = request.nextUrl.searchParams.get("q") || "";
-  const filter = q ? { name: { $regex: q, $options: "i" } } : {};
+  const safeQ = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const filter = safeQ ? { name: { $regex: safeQ, $options: "i" } } : {};
   const categories = await Category.find(filter).sort({ name: 1 }).lean();
   return NextResponse.json({ categories, total: categories.length });
 }

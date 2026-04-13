@@ -8,13 +8,14 @@ function getSecret() {
   return new TextEncoder().encode(secret);
 }
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Allow the login page and auth API through
   if (
     pathname === "/saasadmin/login" ||
-    pathname.startsWith("/api/saasadmin/auth/")
+    pathname.startsWith("/api/saasadmin/auth/") ||
+    pathname === "/api/indexnow"
   ) {
     return NextResponse.next();
   }

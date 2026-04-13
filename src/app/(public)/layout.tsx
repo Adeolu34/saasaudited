@@ -24,6 +24,7 @@ export default function PublicLayout({
           description:
             "Unbiased, data-driven insights into the stacks that scale.",
           url: "https://saasaudited.com",
+          logo: "https://saasaudited.com/saasreviewedfav.png",
         }}
       />
       <TopNavBar />
