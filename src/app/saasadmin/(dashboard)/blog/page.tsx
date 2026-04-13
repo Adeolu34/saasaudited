@@ -24,6 +24,7 @@ async function getPosts(q: string, page: number) {
       title: p.title,
       slug: p.slug,
       category: p.category,
+      status: p.status || "published",
       is_featured: p.is_featured,
     })),
     total,
@@ -69,7 +70,7 @@ export default async function BlogPage({
                 <th className="px-4 py-3 text-left text-xs font-label font-semibold uppercase tracking-wider text-on-surface-variant">Title</th>
                 <th className="px-4 py-3 text-left text-xs font-label font-semibold uppercase tracking-wider text-on-surface-variant">Slug</th>
                 <th className="px-4 py-3 text-left text-xs font-label font-semibold uppercase tracking-wider text-on-surface-variant">Category</th>
-                <th className="px-4 py-3 text-left text-xs font-label font-semibold uppercase tracking-wider text-on-surface-variant">Featured</th>
+                <th className="px-4 py-3 text-left text-xs font-label font-semibold uppercase tracking-wider text-on-surface-variant">Status</th>
                 <th className="px-4 py-3 text-right text-xs font-label font-semibold uppercase tracking-wider text-on-surface-variant w-24">Actions</th>
               </tr>
             </thead>
@@ -80,17 +81,23 @@ export default async function BlogPage({
                   <td className="px-4 py-3 text-xs font-mono text-on-surface-variant">{p.slug}</td>
                   <td className="px-4 py-3 text-sm text-on-surface">{p.category}</td>
                   <td className="px-4 py-3">
-                    {p.is_featured ? (
-                      <span className="material-symbols-outlined text-primary text-lg" style={{ fontVariationSettings: '"FILL" 1' }}>star</span>
+                    {p.status === "draft" ? (
+                      <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded">Draft</span>
                     ) : (
-                      <span className="text-on-surface-variant/30">-</span>
+                      <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-green-700 bg-green-50 px-2 py-0.5 rounded">Published</span>
                     )}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
-                      <a href={`/blog/${p.slug}`} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-lg hover:bg-surface-container transition-colors text-on-surface-variant hover:text-primary" title="View on site">
-                        <span className="material-symbols-outlined text-lg">open_in_new</span>
-                      </a>
+                      {p.status !== "draft" ? (
+                        <a href={`/blog/${p.slug}`} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-lg hover:bg-surface-container transition-colors text-on-surface-variant hover:text-primary" title="View on site">
+                          <span className="material-symbols-outlined text-lg">open_in_new</span>
+                        </a>
+                      ) : (
+                        <span className="p-1.5 text-on-surface-variant/30" title="Publish first to view">
+                          <span className="material-symbols-outlined text-lg">open_in_new</span>
+                        </span>
+                      )}
                       <Link href={`/saasadmin/blog/${p._id}/edit`} className="p-1.5 rounded-lg hover:bg-surface-container transition-colors text-on-surface-variant hover:text-primary" title="Edit">
                         <span className="material-symbols-outlined text-lg">edit</span>
                       </Link>
