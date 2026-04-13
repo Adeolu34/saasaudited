@@ -8,31 +8,81 @@ interface ImageGenerationParams {
   variant?: "featured" | "inline";
 }
 
+/**
+ * Extract a concise visual subject from the blog context to guide the image.
+ * Instead of dumping raw context, we distill it into a short scene description.
+ */
+function buildVisualSubject(title: string, context?: string): string {
+  // Extract key nouns/concepts from the title for visual grounding
+  const cleanTitle = title
+    .replace(/\(inline\)$/i, "")
+    .replace(/\d{4}/g, "")
+    .replace(/[:,\-–—|]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!context) return cleanTitle;
+
+  // Pull category and tags from the structured context for visual hints
+  const categoryMatch = context.match(/Category:\s*([^|]+)/i);
+  const tagsMatch = context.match(/Tags:\s*([^|]+)/i);
+  const excerptMatch = context.match(/Excerpt:\s*([^|]+)/i);
+
+  const parts: string[] = [cleanTitle];
+  if (categoryMatch) parts.push(categoryMatch[1].trim());
+  if (tagsMatch) parts.push(tagsMatch[1].trim().split(",").slice(0, 3).join(", "));
+  if (excerptMatch) parts.push(excerptMatch[1].trim().slice(0, 120));
+
+  return parts.join(". ");
+}
+
+/**
+ * Category-aware style modifiers to make images feel distinct per topic.
+ */
+function getCategoryStyle(context?: string): string {
+  if (!context) return "";
+
+  const cat = (context.match(/Category:\s*([^|]+)/i)?.[1] || "").trim().toLowerCase();
+
+  const categoryStyles: Record<string, string> = {
+    strategy:
+      "Executive boardroom atmosphere with strategic diagrams, chess-like composition. Cool blue and slate tones.",
+    reviews:
+      "Product showcase with glowing screens and interface previews floating in space. Warm amber and electric blue accents.",
+    comparisons:
+      "Split-screen duality concept, two contrasting approaches side by side. Bold contrasting color halves.",
+    guides:
+      "Open book or pathway metaphor with clear steps and milestones. Inviting warm gradient palette.",
+    "industry news":
+      "Breaking news energy with dynamic motion blur and data streams. High-contrast editorial red and white.",
+  };
+
+  return categoryStyles[cat] || "";
+}
+
 export async function generateImage(params: ImageGenerationParams): Promise<string> {
   const replicate = getReplicate();
 
+  const visualSubject = buildVisualSubject(params.title, params.context);
+  const categoryStyle = getCategoryStyle(params.context);
+
   const styleMap = {
     blog: {
-      featured:
-        "Professional editorial photograph for a technology magazine cover. Clean, modern composition with dramatic lighting. Abstract geometric shapes representing software and cloud technology. Rich jewel-tone color palette with deep blues, teals, and warm accents. Sharp focus, shallow depth of field. No text, no watermarks, no logos, no words, no letters.",
-      inline:
-        "Clean explanatory diagram-style illustration for a technology article. Isometric perspective showing interconnected software interfaces and data flow. Soft natural lighting, muted professional color palette. Informational and clear, not decorative. No text, no watermarks, no logos, no words, no letters.",
+      featured: `High-end editorial photograph for a premium technology publication. ${categoryStyle || "Rich jewel-tone color palette with deep blues, teals, and warm amber accents."} Cinematic lighting with dramatic depth. The scene visually represents: ${visualSubject}. Photorealistic, ultra-sharp, shot on medium format camera. No text, no watermarks, no logos, no words, no letters, no UI elements.`,
+      inline: `Clean conceptual illustration for a technology article. Soft isometric perspective. The visual metaphor represents: ${visualSubject}. Muted professional color palette with one vibrant accent color. Elegant and informational, like a premium infographic header. No text, no watermarks, no logos, no words, no letters.`,
     },
-    tool:
-      "Minimal product visualization of a modern SaaS application interface. Clean white background, subtle shadows, floating UI elements with soft gradients. Professional product photography style. Sharp, high contrast, premium feel. No text, no watermarks, no logos, no words, no letters.",
-    author:
-      "Professional corporate headshot portrait. Clean studio background with subtle gradient. Sharp focus on face, confident and approachable expression, business attire. Natural skin tones, soft studio lighting. Photorealistic, high detail. No text, no watermarks.",
+    tool: `Minimal product visualization of a modern SaaS application interface. Clean white background, subtle shadows, floating UI elements with soft gradients. Professional product photography style. Sharp, high contrast, premium feel. No text, no watermarks, no logos, no words, no letters.`,
+    author: `Professional corporate headshot portrait. Clean studio background with subtle gradient. Sharp focus on face, confident and approachable expression, business attire. Natural skin tones, soft studio lighting. Photorealistic, high detail. No text, no watermarks.`,
   };
-
-  const context = params.context ? ` Scene context: ${params.context}.` : "";
 
   let prompt: string;
   if (params.contentType === "author") {
     prompt = `${styleMap.author} Person: "${params.title}". Ultra detailed, editorial photography quality.`;
   } else if (params.contentType === "blog") {
     const variant = params.variant === "inline" ? "inline" : "featured";
-    prompt = `${styleMap.blog[variant]} Topic: "${params.title}".${context}`;
+    prompt = styleMap.blog[variant];
   } else {
+    const context = params.context ? ` Scene context: ${params.context}.` : "";
     prompt = `${styleMap.tool} Product concept: "${params.title}".${context}`;
   }
 

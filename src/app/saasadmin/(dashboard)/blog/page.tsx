@@ -88,6 +88,9 @@ export default async function BlogPage({
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
+                      <a href={`/blog/${p.slug}`} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-lg hover:bg-surface-container transition-colors text-on-surface-variant hover:text-primary" title="View on site">
+                        <span className="material-symbols-outlined text-lg">open_in_new</span>
+                      </a>
                       <Link href={`/saasadmin/blog/${p._id}/edit`} className="p-1.5 rounded-lg hover:bg-surface-container transition-colors text-on-surface-variant hover:text-primary" title="Edit">
                         <span className="material-symbols-outlined text-lg">edit</span>
                       </Link>
