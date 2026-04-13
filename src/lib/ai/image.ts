@@ -186,7 +186,7 @@ export async function generateImage(params: ImageGenerationParams): Promise<stri
     input = {
       prompt,
       aspect_ratio: aspect,
-      output_format: "webp",
+      output_format: "png",
       num_images: 1,
       safety_tolerance: 2,
     };
