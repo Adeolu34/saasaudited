@@ -24,6 +24,7 @@ interface BlogPostData {
   toc?: TocItem[];
   read_time?: number;
   is_featured?: boolean;
+  status?: "draft" | "published";
 }
 
 /** Extract TOC from HTML by parsing <h2 id="...">...</h2> tags */
@@ -224,6 +225,7 @@ export default function BlogPostForm({ post }: { post?: BlogPostData }) {
       toc: finalToc,
       read_time: readTime || calcReadTime(content),
       is_featured: form.has("is_featured"),
+      status: form.get("status") || "published",
     };
 
     try {
@@ -311,6 +313,23 @@ export default function BlogPostForm({ post }: { post?: BlogPostData }) {
               </button>
             </div>
           )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label htmlFor="status" className="font-label text-xs uppercase tracking-widest text-on-surface-variant font-semibold">
+              Status
+            </label>
+            <select
+              id="status"
+              name="status"
+              defaultValue={post?.status || "published"}
+              className="w-full px-4 py-2.5 bg-surface-container-low rounded-lg text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40 transition-shadow text-sm"
+            >
+              <option value="draft">Draft</option>
+              <option value="published">Published</option>
+            </select>
+          </div>
         </div>
 
         <label className="flex items-center gap-2 text-sm text-on-surface cursor-pointer">
