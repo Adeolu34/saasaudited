@@ -14,6 +14,58 @@ import { buildBlogImageContext, insertInlineImageIntoBlogContent } from "@/lib/a
 export const maxDuration = 300;
 
 /**
+ * Generate images in the background and update the blog post when done.
+ * This runs after the HTTP response has already been sent, so it won't
+ * cause timeouts. Safe on self-hosted Node.js (Coolify) where the
+ * process stays alive after response.
+ */
+async function generateImagesInBackground(postId: string, blogData: Record<string, unknown>) {
+  try {
+    await dbConnect();
+    const title = blogData.title as string;
+    const imageContext = buildBlogImageContext({
+      title,
+      category: typeof blogData.category === "string" ? blogData.category : undefined,
+      excerpt: typeof blogData.excerpt === "string" ? blogData.excerpt : undefined,
+      content: typeof blogData.content === "string" ? blogData.content : undefined,
+      tags: Array.isArray(blogData.tags)
+        ? blogData.tags.filter((tag): tag is string => typeof tag === "string").slice(0, 6)
+        : undefined,
+    });
+
+    const hasContent = typeof blogData.content === "string" && blogData.content.trim();
+
+    // Generate both images in parallel
+    const [featuredUrl, inlineUrl] = await Promise.all([
+      generateImage({ title, contentType: "blog", variant: "featured", context: imageContext }),
+      hasContent
+        ? generateImage({ title: `${title} (inline)`, contentType: "blog", variant: "inline", context: imageContext })
+        : Promise.resolve(null),
+    ]);
+
+    // Build the update
+    const update: Record<string, unknown> = {};
+    if (featuredUrl) {
+      update.featured_image = featuredUrl;
+    }
+    if (inlineUrl && typeof blogData.content === "string") {
+      update.content = insertInlineImageIntoBlogContent(
+        blogData.content,
+        inlineUrl,
+        `Illustration for ${title}`
+      );
+    }
+
+    if (Object.keys(update).length > 0) {
+      await BlogPost.findByIdAndUpdate(postId, update);
+      console.log(`[GenerateFromResearch] Images added to post ${postId}`);
+    }
+  } catch (err) {
+    console.error("[GenerateFromResearch] Background image generation failed:", err);
+  }
+}
+
+/**
  * POST /api/cron/generate-from-research
  *
  * Step 2 of the two-step blog pipeline.
@@ -86,7 +138,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Step 4: Generate blog post
+    // Step 4: Generate blog post via OpenAI
     console.log("[GenerateFromResearch] Generating blog post...");
     const openai = getOpenAI();
     const completion = await openai.chat.completions.create({
@@ -112,44 +164,6 @@ export async function POST(request: NextRequest) {
       blogData.featured_image = "";
     }
 
-    // Step 5: Generate images (featured + inline) in parallel
-    if (settings.auto_generate_images) {
-      try {
-        const title = blogData.title as string;
-        const imageContext = buildBlogImageContext({
-          title,
-          category: typeof blogData.category === "string" ? blogData.category : undefined,
-          excerpt: typeof blogData.excerpt === "string" ? blogData.excerpt : undefined,
-          content: typeof blogData.content === "string" ? blogData.content : undefined,
-          tags: Array.isArray(blogData.tags)
-            ? blogData.tags.filter((tag): tag is string => typeof tag === "string").slice(0, 6)
-            : undefined,
-        });
-
-        const hasContent = typeof blogData.content === "string" && blogData.content.trim();
-
-        // Run both image generations in parallel to cut time in half
-        const [featuredUrl, inlineUrl] = await Promise.all([
-          generateImage({ title, contentType: "blog", variant: "featured", context: imageContext }),
-          hasContent
-            ? generateImage({ title: `${title} (inline)`, contentType: "blog", variant: "inline", context: imageContext })
-            : Promise.resolve(null),
-        ]);
-
-        blogData.featured_image = featuredUrl;
-
-        if (inlineUrl && typeof blogData.content === "string") {
-          blogData.content = insertInlineImageIntoBlogContent(
-            blogData.content,
-            inlineUrl,
-            `Illustration for ${title}`
-          );
-        }
-      } catch (imgErr) {
-        console.error("[GenerateFromResearch] Image generation failed:", imgErr);
-      }
-    }
-
     // Auto-extract TOC from content if AI didn't generate it
     if ((!blogData.toc || (blogData.toc as unknown[]).length === 0) && blogData.content) {
       const tocRegex = /<h2[^>]+id=["']([^"']+)["'][^>]*>(.*?)<\/h2>/gi;
@@ -170,7 +184,7 @@ export async function POST(request: NextRequest) {
       blogData.read_time = Math.max(1, Math.ceil(words / 230));
     }
 
-    // Save as DRAFT for manual review
+    // Save as DRAFT immediately (no waiting for images)
     blogData.status = "draft";
 
     // Ensure slug uniqueness
@@ -181,11 +195,19 @@ export async function POST(request: NextRequest) {
 
     const post = await BlogPost.create(blogData);
 
-    // Step 6: Mark research as used
+    // Mark research as used
     await Research.findByIdAndUpdate(research._id, { status: "used" });
 
     console.log(`[GenerateFromResearch] Draft saved: "${post.title}" (${post.slug})`);
     console.log(`[GenerateFromResearch] Research ${research._id} marked as used`);
+
+    // Step 5: Kick off image generation in the background (fire-and-forget).
+    // The response is sent immediately; images update the post asynchronously.
+    if (settings.auto_generate_images) {
+      generateImagesInBackground(String(post._id), blogData).catch((err) =>
+        console.error("[GenerateFromResearch] Background image task error:", err)
+      );
+    }
 
     return NextResponse.json({
       success: true,
@@ -193,6 +215,7 @@ export async function POST(request: NextRequest) {
       title: post.title,
       slug: post.slug,
       status: "draft",
+      imagesGenerating: !!settings.auto_generate_images,
       researchId: research._id,
       keywords: research.keywords,
     });
