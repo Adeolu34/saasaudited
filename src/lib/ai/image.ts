@@ -37,32 +37,65 @@ function buildVisualSubject(title: string, context?: string): string {
 }
 
 /**
- * Build a short, punchy headline (3-6 words) for text overlay on the image.
+ * Build a short, punchy headline (2-5 words) for text overlay on the image.
  * Nano Banana Pro renders text accurately, so we use this for click-grabbing headlines.
  */
 function buildImageHeadline(title: string): string {
-  // Strip year, parentheticals, and common filler
-  let headline = title
-    .replace(/\(inline\)$/i, "")
-    .replace(/\b20\d{2}\b/g, "")
-    .replace(/\s*[:\-–—|]\s*/g, " — ")
-    .trim();
+  const LEADING_FILLER = /^(the|a|an|to|how|what|why|your|our|their|this|that|these|those)\s+/i;
+  const TRAILING_FILLER = /\s+(the|a|an|and|or|to|in|of|with|for|on|at|by|is|are|was)$/i;
 
-  // If title has a separator, take the punchier half
-  const separatorMatch = headline.match(/^(.+?)\s*—\s*(.+)$/);
-  if (separatorMatch) {
-    const [, left, right] = separatorMatch;
-    // Pick the shorter, punchier side (but at least 2 words)
-    headline =
-      left.split(/\s+/).length <= 5 && left.split(/\s+/).length >= 2
-        ? left.trim()
-        : right.trim();
+  function stripFiller(s: string): string {
+    let prev = "";
+    let result = s.trim();
+    // Iteratively strip leading/trailing filler until stable
+    while (result !== prev) {
+      prev = result;
+      result = result.replace(LEADING_FILLER, "").replace(TRAILING_FILLER, "").trim();
+    }
+    return result;
   }
 
-  // Truncate to ~6 words max for visual impact
+  function cleanSegment(s: string): string {
+    return stripFiller(
+      s
+        .replace(/\(inline\)$/i, "")
+        .replace(/\b20\d{2}\b/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+    );
+  }
+
+  // Split on colon, em-dash, en-dash, pipe, or space-dash-space (but NOT hyphens inside words)
+  const segments = title
+    .split(/\s*[:|–—]\s*|\s+-\s+/)
+    .map(cleanSegment)
+    .filter((s) => s.split(/\s+/).length >= 2);
+
+  // Pick the best segment: prefer 2-5 words
+  let headline = "";
+  for (const seg of segments) {
+    const wordCount = seg.split(/\s+/).length;
+    if (wordCount >= 2 && wordCount <= 5) {
+      headline = seg;
+      break;
+    }
+  }
+
+  // Fallback: use the first valid segment
+  if (!headline && segments.length > 0) {
+    headline = segments[0];
+  }
+  if (!headline) {
+    headline = cleanSegment(title);
+  }
+
+  // Truncate to 5 words, then clean up any dangling phrases from the cut
   const words = headline.split(/\s+/);
-  if (words.length > 6) {
-    headline = words.slice(0, 6).join(" ");
+  if (words.length > 5) {
+    headline = words.slice(0, 5).join(" ");
+    // Remove trailing "preposition + word" left dangling by the cut (e.g. "Tools for Small")
+    headline = headline.replace(/\s+(for|to|in|of|with|on|at|by)\s+\S+$/i, "");
+    headline = stripFiller(headline);
   }
 
   return headline.toUpperCase();
