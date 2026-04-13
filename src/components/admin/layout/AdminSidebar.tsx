@@ -25,6 +25,7 @@ const navSections: { label: string; items: NavItem[] }[] = [
       { href: "/saasadmin/comparisons", icon: "compare", label: "Comparisons" },
       { href: "/saasadmin/blog", icon: "article", label: "Blog Posts" },
       { href: "/saasadmin/categories", icon: "category", label: "Categories" },
+      { href: "/saasadmin/authors", icon: "person", label: "Authors" },
       { href: "/saasadmin/research", icon: "travel_explore", label: "Research" },
     ],
   },
