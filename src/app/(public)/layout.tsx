@@ -2,6 +2,18 @@ import TopNavBar from "@/components/layout/TopNavBar";
 import Footer from "@/components/layout/Footer";
 import JsonLd from "@/components/shared/JsonLd";
 import ScrollProgress from "@/components/shared/ScrollProgress";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
+  },
+};
 
 export default function PublicLayout({
   children,

@@ -6,6 +6,13 @@ export const metadata: Metadata = {
   title: "Build Your Comparison",
   description:
     "Pick any two SaaS tools in the same category and see an instant side-by-side comparison based on our editorial data.",
+  robots: {
+    index: false,
+    follow: true,
+  },
+  alternates: {
+    canonical: "/compare/build",
+  },
   openGraph: {
     title: "Build Your Comparison — SaasAudited",
     description:

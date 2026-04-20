@@ -38,6 +38,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description,
+    robots: {
+      index: false,
+      follow: true,
+    },
+    alternates: {
+      canonical: `/compare/build/${[parsed.slugA, parsed.slugB].sort().join("-vs-")}`,
+    },
     openGraph: { title, description },
     twitter: { card: "summary", title },
   };

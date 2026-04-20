@@ -11,10 +11,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   await dbConnect();
 
   const [tools, posts, categories, comparisons] = await Promise.all([
-    Tool.find({}, { slug: 1, updatedAt: 1 }).lean(),
-    BlogPost.find({ status: { $ne: "draft" } }, { slug: 1, updatedAt: 1 }).lean(),
-    Category.find({}, { slug: 1, updatedAt: 1 }).lean(),
-    Comparison.find({}, { slug: 1, updatedAt: 1 }).lean(),
+    Tool.find(
+      { slug: { $exists: true, $ne: "" } },
+      { slug: 1, updatedAt: 1 }
+    ).lean(),
+    BlogPost.find(
+      { status: { $ne: "draft" }, slug: { $exists: true, $ne: "" } },
+      { slug: 1, updatedAt: 1 }
+    ).lean(),
+    Category.find(
+      { slug: { $exists: true, $ne: "" } },
+      { slug: 1, updatedAt: 1 }
+    ).lean(),
+    Comparison.find(
+      { slug: { $exists: true, $ne: "" } },
+      { slug: 1, updatedAt: 1 }
+    ).lean(),
   ]);
 
   const staticPages: MetadataRoute.Sitemap = [

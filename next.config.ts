@@ -4,6 +4,16 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        source: "/reviews/brevo",
+        destination: "/reviews",
+        permanent: true,
+      },
+      {
+        source: "/reviews/attio",
+        destination: "/reviews",
+        permanent: true,
+      },
+      {
         source: "/:path*",
         has: [{ type: "host", value: "www.saasaudited.com" }],
         destination: "https://saasaudited.com/:path*",
