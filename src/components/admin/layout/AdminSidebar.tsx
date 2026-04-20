@@ -27,6 +27,11 @@ const navSections: { label: string; items: NavItem[] }[] = [
       { href: "/saasadmin/categories", icon: "category", label: "Categories" },
       { href: "/saasadmin/authors", icon: "person", label: "Authors" },
       { href: "/saasadmin/research", icon: "travel_explore", label: "Research" },
+      {
+        href: "/saasadmin/competitor-intel",
+        icon: "manage_search",
+        label: "Competitor Intel",
+      },
     ],
   },
   {
